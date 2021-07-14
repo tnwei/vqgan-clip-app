@@ -243,8 +243,10 @@ def run(
         model = state.model
         perceptor = state.perceptor
     else:
-        model = load_vqgan_model(args.vqgan_config, args.vqgan_checkpoint).to(device)
-        perceptor = (
+        model = state.model = load_vqgan_model(
+            args.vqgan_config, args.vqgan_checkpoint
+        ).to(device)
+        perceptor = state.perceptor = (
             clip.load(args.clip_model, jit=False)[0]
             .eval()
             .requires_grad_(False)
@@ -343,9 +345,6 @@ def run(
         with torch.no_grad():
             z.copy_(z.maximum(z_min).minimum(z_max))
 
-    state.model = model
-    state.perceptor = perceptor
-    state.prev_im = im
     return im
 
 
