@@ -9,6 +9,10 @@ from PIL import Image
 from torchvision.transforms import functional as TF
 from tqdm import tqdm
 
+import sys
+
+sys.path.append("./taming-transformers")
+
 
 def sinc(x):
     return torch.where(x != 0, torch.sin(math.pi * x) / (math.pi * x), x.new_ones([]))
