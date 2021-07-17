@@ -17,7 +17,7 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from CLIP import clip
 
@@ -211,7 +211,9 @@ state = State()
 def run(
     text_input: str = "the first day of the waters",
     vqgan_ckpt: str = "vqgan_imagenet_f16_16384",
-    num_steps: int = 10,
+    num_steps: int = 300,
+    image_x=300,
+    image_y=300,
     continue_prev_run: bool = False,
 ):
     # Leaving most of this untouched
@@ -220,15 +222,15 @@ def run(
         image_prompts=[],
         noise_prompt_seeds=[],
         noise_prompt_weights=[],
-        size=[300, 300],
+        size=[int(image_y), int(image_x)],
         # init_image=None,
         init_weight=0.0,
         # clip.available_models()
         # ['RN50', 'RN101', 'RN50x4', 'ViT-B/32']
         # Visual Transformer seems to be the smallest
         clip_model="ViT-B/32",
-        vqgan_config=vqgan_ckpt + ".yaml",
-        vqgan_checkpoint=vqgan_ckpt + ".ckpt",
+        vqgan_config=f"assets/{vqgan_ckpt}.yaml",
+        vqgan_checkpoint=f"assets/{vqgan_ckpt}.ckpt",
         step_size=0.05,
         cutn=64,
         cut_pow=1.0,
@@ -345,32 +347,46 @@ def run(
         with torch.no_grad():
             z.copy_(z.maximum(z_min).minimum(z_max))
 
+    state.prev_im = im
     return im
 
 
-# TODO: Allow single model to continue iterations
-# TODO: Allow picking up from prior image
+# TODO: Allow visualizing intermediate steps
 # Gradio doesn't seem very useful given that I want state to implement callbacks for incremental updating images
 
-description = """
-+ Added the feature to use existing image as input image to the next run. Should be interesting to see how images can be molded over a successive sequence of prompts
-+ Note that chaining a few consecutive short runs of the same prompt and running a single run using the same prompt with equivalent steps should not yield the same image due to the RNG seed being reset
-+ Maybe some kind of operation that scatters the pixel intensities can help "reverse" images so that undesired features can be removed
-"""
+with open("README.md", "r") as f:
+    long_description = f.read()
+
 
 iface = gr.Interface(
     fn=run,
     inputs=[
         "text",
-        gr.inputs.Radio(["vqgan_imagenet_f16_1024", "vqgan_imagenet_f16_16384"]),
-        gr.inputs.Slider(minimum=20, maximum=2000, step=20, default=200),
+        gr.inputs.Radio(
+            [
+                "vqgan_imagenet_f16_1024",
+                "vqgan_imagenet_f16_16384",
+                "coco",
+                "faceshq",
+                "sflickr",
+                "wikiart_16384",
+                "wikiart_1024",
+            ]
+        ),
+        gr.inputs.Slider(minimum=20, maximum=2000, step=25, default=300),
+        gr.inputs.Number(default=300, label="Xdim"),
+        gr.inputs.Number(default=300, label="Ydim"),
         gr.inputs.Checkbox(label="Continue previous run"),
     ],
     outputs=["image"],
-    title="VQGAN-CLIP webapp",
+    title="VQGAN-CLIP",
     live=False,  # Live reloads based on input which is NOT what we want
     server_port=7860,
-    article=description,
+    theme="default",  # default, dark, huggingface
+    allow_screenshot=True,
+    allow_flagging=False,
+    description="Simple Gradio webapp for local experimentation of VQGAN-CLIP",
+    article=long_description,
 )
 
 iface.launch(share=False)
