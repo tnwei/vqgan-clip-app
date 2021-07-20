@@ -1,0 +1,15 @@
+# Config file for gitlint (https://jorisroovers.com/gitlint/)
+# Can be installed from pip, recommend to use pipx
+# Generate default .gitlint using gitlint generate-config
+# Can be used as a hook in pre-commit
+
+[general]
+# B6 requires a body message to be defined
+ignore=B6
+# Activate conventional commits
+contrib=contrib-title-conventional-commits
+
+[contrib-title-conventional-commits]
+# Specify allowed commit types. For details see: https://www.conventionalcommits.org/
+types = feat, fix, chore, docs, test, refactor, update, merge, explore
+

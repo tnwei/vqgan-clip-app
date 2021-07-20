@@ -1,0 +1,17 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v2.3.0"
+    hooks:
+    -   id: check-ast
+    -   id: check-json
+    -   id: check-yaml
+-   repo: https://github.com/psf/black
+    rev: "19.3b0"
+    hooks:
+    -   id: black
+-   repo: https://github.com/jorisroovers/gitlint
+    rev: "018f42e" 
+    hooks:
+    -   id: gitlint
+        # required to refer to .gitlint from where the pre-commit venv is
+        args: [-C ../../../.gitlint, --msg-filename]
