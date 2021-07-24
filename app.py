@@ -28,6 +28,7 @@ from utils import (
     synth,
     checkin,
 )
+from typing import Optional
 
 # Hacky method to preserve state
 # class State:
@@ -48,9 +49,10 @@ def run(
     text_input: str = "the first day of the waters",
     vqgan_ckpt: str = "vqgan_imagenet_f16_16384",
     num_steps: int = 300,
-    image_x=300,
-    image_y=300,
+    image_x: int = 300,
+    image_y: int = 300,
     continue_prev_run: bool = False,
+    seed: Optional[int] = None,
     **kwargs,  # Use this to receive Streamlit objects
 ):
     # Leaving most of this untouched
@@ -72,7 +74,7 @@ def run(
         cutn=64,
         cut_pow=1.0,
         display_freq=50,
-        seed=None,
+        seed=seed,
     )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -235,6 +237,13 @@ if __name__ == "__main__":
 
         image_x = st.sidebar.number_input("Xdim", value=300)
         image_y = st.sidebar.number_input("ydim", value=300)
+        set_seed = st.sidebar.checkbox("Set seed", value=False)
+
+        seed_widget = st.sidebar.empty()
+        if set_seed is True:
+            seed = seed_widget.number_input("seed", value=0)
+        else:
+            seed = None
         continue_prev_run = st.sidebar.checkbox("Continue previous run", value=False)
         submitted = st.form_submit_button("Run!")
         status_text = st.empty()
@@ -260,8 +269,9 @@ if __name__ == "__main__":
             text_input=text_input,
             vqgan_ckpt=radio,
             num_steps=num_steps,
-            image_x=image_x,
-            image_y=image_y,
+            image_x=int(image_x),
+            image_y=int(image_y),
+            seed=int(seed) if set_seed is True else None,
             continue_prev_run=continue_prev_run,
             im_display_slot=im_display_slot,
             step_progress_bar=step_progress_bar,
