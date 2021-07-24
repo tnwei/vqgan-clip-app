@@ -231,7 +231,10 @@ if __name__ == "__main__":
 
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
-        text_input = st.text_input("Prompt text")
+        text_input = st.text_input(
+            "Prompt text",
+            help="VQGAN-CLIP will generate an image that best fits the prompt",
+        )
         radio = st.sidebar.radio(
             "Model weights",
             [
@@ -244,6 +247,7 @@ if __name__ == "__main__":
                 "wikiart_1024",
             ],
             index=defaults["weights"],
+            help="Choose which weights to load, trained on different datasets",
         )
         num_steps = st.sidebar.number_input(
             "Num steps",
@@ -251,19 +255,32 @@ if __name__ == "__main__":
             min_value=-1,
             max_value=None,
             step=1,
+            help="Specify -1 to run indefinitely. Note: haven't figured out how to stop gracefully",
         )
 
-        image_x = st.sidebar.number_input("Xdim", value=defaults["Xdim"])
-        image_y = st.sidebar.number_input("ydim", value=defaults["ydim"])
-        set_seed = st.sidebar.checkbox("Set seed", value=defaults["set_seed"])
+        image_x = st.sidebar.number_input(
+            "Xdim", value=defaults["Xdim"], help="Width of output image, in pixels"
+        )
+        image_y = st.sidebar.number_input(
+            "ydim", value=defaults["ydim"], help="Height of output image, in pixels"
+        )
+        set_seed = st.sidebar.checkbox(
+            "Set seed",
+            value=defaults["set_seed"],
+            help="Check to set random seed for reproducibility. Will add option to specify seed",
+        )
 
         seed_widget = st.sidebar.empty()
         if set_seed is True:
-            seed = seed_widget.number_input("seed", value=defaults["seed"])
+            seed = seed_widget.number_input(
+                "seed", value=defaults["seed"], help="Random seed to use"
+            )
         else:
             seed = None
         continue_prev_run = st.sidebar.checkbox(
-            "Continue previous run", value=defaults["continue_prev_run"]
+            "Continue previous run",
+            value=defaults["continue_prev_run"],
+            help="Use existing image and existing weights for the next run",
         )
         submitted = st.form_submit_button("Run!")
         status_text = st.empty()
