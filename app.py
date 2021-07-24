@@ -193,57 +193,80 @@ def run(
 
     # Streamlit tie-in -----------------------------------
 
-    status_text.text("Running ...")
     step_counter = 0
     frames = []
 
-    # While loop to accomodate running predetermined steps or running indefinitely
-    while True:
-        opt.zero_grad()
-        lossAll = ascend_txt()
-        im = checkin(step_counter, lossAll, model, z)
+    try:
+        # Try block catches st.script_runner.StopExecution, no need of a dedicated stop button
+        # Reason is st.form is meant to be self-contained either within sidebar, or in main body
+        # The way the form is implemented in this app splits the form across both regions
+        # This is intended to prevent the model settings from crowding the main body
+        # However, touching any button resets the app state, making it impossible to
+        # implement a stop button that can still dump output
+        while True:
+            # While loop to accomodate running predetermined steps or running indefinitely
+            status_text.text(f"Running step {step_counter}")
+            opt.zero_grad()
+            lossAll = ascend_txt()
+            im = checkin(step_counter, lossAll, model, z)
 
-        step_progress_bar.progress((step_counter + 1) / num_steps)
-        im_display_slot.image(im, caption="Output image")
+            if num_steps > 0:  # skip when num_steps = -1
+                step_progress_bar.progress((step_counter + 1) / num_steps)
+            else:
+                step_progress_bar.progress(100)
 
-        # Save image at every step
-        st.session_state["prev_im"] = im
+            # At every step, display and save image
+            im_display_slot.image(im, caption="Output image")
+            st.session_state["prev_im"] = im
 
-        # ref: https://stackoverflow.com/a/33117447/13095028
-        # im_byte_arr = io.BytesIO()
-        # im.save(im_byte_arr, format="JPEG")
-        # frames.append(im_byte_arr.getvalue()) # read()
-        frames.append(np.asarray(im))
+            # ref: https://stackoverflow.com/a/33117447/13095028
+            # im_byte_arr = io.BytesIO()
+            # im.save(im_byte_arr, format="JPEG")
+            # frames.append(im_byte_arr.getvalue()) # read()
+            frames.append(np.asarray(im))
 
-        # End of Stremalit tie-in ------------------------
+            # End of Stremalit tie-in ------------------------
 
-        loss = sum(lossAll)
-        loss.backward()
-        opt.step()
-        with torch.no_grad():
-            z.copy_(z.maximum(z_min).minimum(z_max))
+            loss = sum(lossAll)
+            loss.backward()
+            opt.step()
+            with torch.no_grad():
+                z.copy_(z.maximum(z_min).minimum(z_max))
 
-        step_counter += 1
-        if (step_counter == num_steps) and num_steps > 0:
-            break
+            step_counter += 1
 
-    # Stitch into video using imageio
-    writer = imageio.get_writer("temp.mp4", fps=24)
-    for frame in frames:
-        writer.append_data(frame)
-    writer.close()
+            if (step_counter == num_steps) and num_steps > 0:
+                break
 
-    status_text.text("Done!")
+        # Stitch into video using imageio
+        writer = imageio.get_writer("temp.mp4", fps=24)
+        for frame in frames:
+            writer.append_data(frame)
+        writer.close()
 
-    # End of Stremalit tie-in ----------------------------
+        status_text.text("Done!")
 
-    return im
+        # End of Stremalit tie-in ----------------------------
+
+        return im
+
+    except st.script_runner.StopException as e:
+        # Dump output to dashboard
+        print(f"Received Streamlit StopException")
+        status_text.text("Execution interruped, dumping outputs ...")
+        writer = imageio.get_writer("temp.mp4", fps=24)
+        for frame in frames:
+            writer.append_data(frame)
+        writer.close()
+
+        status_text.text("Done!")
 
 
 if __name__ == "__main__":
     st.set_page_config(page_title="VQGAN-CLIP playground")
     st.title("VQGAN-CLIP playground")
 
+    # Start of input form
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
         text_input = st.text_input(
@@ -270,7 +293,7 @@ if __name__ == "__main__":
             min_value=-1,
             max_value=None,
             step=1,
-            help="Specify -1 to run indefinitely. Use Streamlit's stop button in the top right corner to terminate execution",
+            help="Specify -1 to run indefinitely. Use Streamlit's stop button in the top right corner to terminate execution. The exception is caught so the most recent output will be dumped to dashboard",
         )
 
         image_x = st.sidebar.number_input(
@@ -298,9 +321,11 @@ if __name__ == "__main__":
             help="Use existing image and existing weights for the next run",
         )
         submitted = st.form_submit_button("Run!")
-        status_text = st.empty()
-        status_text.text("Pending input prompt")
-        step_progress_bar = st.progress(0)
+        # End of form
+
+    status_text = st.empty()
+    status_text.text("Pending input prompt")
+    step_progress_bar = st.progress(0)
 
     im_display_slot = st.empty()
     vid_display_slot = st.empty()
