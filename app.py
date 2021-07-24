@@ -15,7 +15,6 @@ from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
 from tqdm import tqdm
-
 from CLIP import clip
 
 from utils import (
@@ -30,6 +29,8 @@ from utils import (
 )
 from typing import Optional
 from omegaconf import OmegaConf
+import imageio
+import numpy as np
 
 # Hacky method to preserve state
 # class State:
@@ -106,6 +107,8 @@ def run(
 
         if "perceptor" in st.session_state:
             del st.session_state["perceptor"]
+
+        # debug_slot.write(st.session_state) # DEBUG
 
         model = st.session_state["model"] = load_vqgan_model(
             args.vqgan_config, args.vqgan_checkpoint
@@ -192,6 +195,7 @@ def run(
 
     status_text.text("Running ...")
     step_counter = 0
+    frames = []
 
     # While loop to accomodate running predetermined steps or running indefinitely
     while True:
@@ -201,8 +205,15 @@ def run(
 
         step_progress_bar.progress((step_counter + 1) / num_steps)
         im_display_slot.image(im, caption="Output image")
+
         # Save image at every step
         st.session_state["prev_im"] = im
+
+        # ref: https://stackoverflow.com/a/33117447/13095028
+        # im_byte_arr = io.BytesIO()
+        # im.save(im_byte_arr, format="JPEG")
+        # frames.append(im_byte_arr.getvalue()) # read()
+        frames.append(np.asarray(im))
 
         # End of Stremalit tie-in ------------------------
 
@@ -216,7 +227,11 @@ def run(
         if (step_counter == num_steps) and num_steps > 0:
             break
 
-    # Streamlit tie-in -----------------------------------
+    # Stitch into video using imageio
+    writer = imageio.get_writer("temp.mp4", fps=24)
+    for frame in frames:
+        writer.append_data(frame)
+    writer.close()
 
     status_text.text("Done!")
 
@@ -255,7 +270,7 @@ if __name__ == "__main__":
             min_value=-1,
             max_value=None,
             step=1,
-            help="Specify -1 to run indefinitely. Note: haven't figured out how to stop gracefully",
+            help="Specify -1 to run indefinitely. Use Streamlit's stop button in the top right corner to terminate execution",
         )
 
         image_x = st.sidebar.number_input(
@@ -288,6 +303,7 @@ if __name__ == "__main__":
         step_progress_bar = st.progress(0)
 
     im_display_slot = st.empty()
+    vid_display_slot = st.empty()
     debug_slot = st.empty()
 
     if "prev_im" in st.session_state:
@@ -314,4 +330,5 @@ if __name__ == "__main__":
             step_progress_bar=step_progress_bar,
             status_text=status_text,
         )
+        vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
