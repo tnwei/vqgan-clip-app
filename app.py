@@ -191,17 +191,15 @@ def run(
     # Streamlit tie-in -----------------------------------
 
     status_text.text("Running ...")
+    step_counter = 0
 
-    # End of Stremalit tie-in ----------------------------
-
-    for i in range(num_steps):
+    # While loop to accomodate running predetermined steps or running indefinitely
+    while True:
         opt.zero_grad()
         lossAll = ascend_txt()
-        im = checkin(i, lossAll, model, z)
+        im = checkin(step_counter, lossAll, model, z)
 
-        # Streamlit tie-in -------------------------------
-
-        step_progress_bar.progress((i + 1) / num_steps)
+        step_progress_bar.progress((step_counter + 1) / num_steps)
         im_display_slot.image(im, caption="Output image")
         # Save image at every step
         st.session_state["prev_im"] = im
@@ -213,6 +211,10 @@ def run(
         opt.step()
         with torch.no_grad():
             z.copy_(z.maximum(z_min).minimum(z_max))
+
+        step_counter += 1
+        if (step_counter == num_steps) and num_steps > 0:
+            break
 
     # Streamlit tie-in -----------------------------------
 
