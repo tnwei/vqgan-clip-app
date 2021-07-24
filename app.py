@@ -27,7 +27,7 @@ from utils import (
     synth,
     checkin,
 )
-from typing import Optional
+from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
 import numpy as np
@@ -64,6 +64,7 @@ def run(
     num_steps: int = 300,
     image_x: int = 300,
     image_y: int = 300,
+    image_prompts: List = [],
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
     **kwargs,  # Use this to receive Streamlit objects
@@ -71,7 +72,7 @@ def run(
     # Leaving most of this untouched
     args = argparse.Namespace(
         prompts=[text_input],
-        image_prompts=[],
+        image_prompts=image_prompts,
         noise_prompt_seeds=[],
         noise_prompt_weights=[],
         size=[int(image_x), int(image_y)],
@@ -165,12 +166,15 @@ def run(
         embed = perceptor.encode_text(clip.tokenize(txt).to(device)).float()
         pMs.append(Prompt(embed, weight, stop).to(device))
 
-    for prompt in args.image_prompts:
-        path, weight, stop = parse_prompt(prompt)
-        img = resize_image(Image.open(fetch(path)).convert("RGB"), (sideX, sideY))
+    # Streamlit tie-in -----------------------------------------------------------------
+    for uploaded_image in args.image_prompts:
+        # path, weight, stop = parse_prompt(prompt)
+        # img = resize_image(Image.open(fetch(path)).convert("RGB"), (sideX, sideY))
+        img = resize_image(uploaded_image.convert("RGB"), (sideX, sideY))
         batch = make_cutouts(TF.to_tensor(img).unsqueeze(0).to(device))
         embed = perceptor.encode_image(normalize(batch)).float()
         pMs.append(Prompt(embed, weight, stop).to(device))
+    # End of Streamlit tie-in ----------------------------------------------------------
 
     for seed, weight in zip(args.noise_prompt_seeds, args.noise_prompt_weights):
         gen = torch.Generator().manual_seed(seed)
@@ -216,7 +220,7 @@ def run(
                 step_progress_bar.progress(100)
 
             # At every step, display and save image
-            im_display_slot.image(im, caption="Output image")
+            im_display_slot.image(im, caption="Output image", output_format="PNG")
             st.session_state["prev_im"] = im
 
             # ref: https://stackoverflow.com/a/33117447/13095028
@@ -270,7 +274,7 @@ if __name__ == "__main__":
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
         text_input = st.text_input(
-            "Prompt text",
+            "Text prompt",
             help="VQGAN-CLIP will generate an image that best fits the prompt",
         )
         radio = st.sidebar.radio(
@@ -311,10 +315,31 @@ if __name__ == "__main__":
         seed_widget = st.sidebar.empty()
         if set_seed is True:
             seed = seed_widget.number_input(
-                "seed", value=defaults["seed"], help="Random seed to use"
+                "Seed", value=defaults["seed"], help="Random seed to use"
             )
         else:
             seed = None
+
+        use_custom_starting_image = st.sidebar.checkbox(
+            "Add image prompt(s)",
+            value=defaults["use_image_prompts"],
+            help="Check to add image prompt(s), conditions the network similar to the text prompt",
+        )
+
+        starting_image_widget = st.sidebar.empty()
+        if use_custom_starting_image is True:
+            image_prompts = starting_image_widget.file_uploader(
+                "Upload image prompts(s)",
+                type=["png", "jpeg", "jpg"],
+                accept_multiple_files=True,
+                help="Image prompt(s) for the network, will be resized to fit specified dimensions",
+            )
+            # Convert from UploadedFile object to PIL Image
+            if len(image_prompts) != 0:
+                image_prompts = [Image.open(i) for i in image_prompts]
+        else:
+            pass
+
         continue_prev_run = st.sidebar.checkbox(
             "Continue previous run",
             value=defaults["continue_prev_run"],
@@ -332,7 +357,9 @@ if __name__ == "__main__":
     debug_slot = st.empty()
 
     if "prev_im" in st.session_state:
-        im_display_slot.image(st.session_state["prev_im"])
+        im_display_slot.image(
+            st.session_state["prev_im"], caption="Output image", output_format="PNG"
+        )
 
     with st.beta_expander("Expand for README"):
         with open("README.md", "r") as f:
@@ -350,6 +377,7 @@ if __name__ == "__main__":
             image_x=int(image_x),
             image_y=int(image_y),
             seed=int(seed) if set_seed is True else None,
+            image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
             im_display_slot=im_display_slot,
             step_progress_bar=step_progress_bar,

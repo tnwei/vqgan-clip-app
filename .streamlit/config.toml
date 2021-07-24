@@ -1,0 +1,3 @@
+[server]
+# Default is 200 MB
+maxUploadSize = 10
