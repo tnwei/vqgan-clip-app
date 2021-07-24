@@ -1,0 +1,8 @@
+# Modify for different systems, e.g. larger default xdim/ydim for more powerful GPUs
+weights: 0
+num_steps: 100
+Xdim: 375
+ydim: 240
+set_seed: false
+seed: 0
+continue_previous_run: false

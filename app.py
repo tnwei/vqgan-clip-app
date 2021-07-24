@@ -29,6 +29,7 @@ from utils import (
     checkin,
 )
 from typing import Optional
+from omegaconf import OmegaConf
 
 # Hacky method to preserve state
 # class State:
@@ -42,6 +43,17 @@ from typing import Optional
 # st.session_state["model"] = None
 # st.session_state["perceptor"] = None
 # st.session_state["prev_im"] = None
+
+# Load defaults
+# By default, `defaults.yaml` contains the following:
+# weights: 0
+# num_steps: 100
+# Xdim: 375
+# ydim: 240
+# set_seed: false
+# seed: 0
+# continue_previous_run: false
+defaults = OmegaConf.load("defaults.yaml")
 
 
 def run(
@@ -229,22 +241,28 @@ if __name__ == "__main__":
                 "wikiart_16384",
                 "wikiart_1024",
             ],
-            index=0,
+            index=defaults["weights"],
         )
         num_steps = st.sidebar.number_input(
-            "Num steps", value=300, min_value=-1, max_value=None, step=1
+            "Num steps",
+            value=defaults["num_steps"],
+            min_value=-1,
+            max_value=None,
+            step=1,
         )
 
-        image_x = st.sidebar.number_input("Xdim", value=300)
-        image_y = st.sidebar.number_input("ydim", value=300)
-        set_seed = st.sidebar.checkbox("Set seed", value=False)
+        image_x = st.sidebar.number_input("Xdim", value=defaults["Xdim"])
+        image_y = st.sidebar.number_input("ydim", value=defaults["ydim"])
+        set_seed = st.sidebar.checkbox("Set seed", value=defaults["set_seed"])
 
         seed_widget = st.sidebar.empty()
         if set_seed is True:
-            seed = seed_widget.number_input("seed", value=0)
+            seed = seed_widget.number_input("seed", value=defaults["seed"])
         else:
             seed = None
-        continue_prev_run = st.sidebar.checkbox("Continue previous run", value=False)
+        continue_prev_run = st.sidebar.checkbox(
+            "Continue previous run", value=defaults["continue_prev_run"]
+        )
         submitted = st.form_submit_button("Run!")
         status_text = st.empty()
         status_text.text("Pending input prompt")
