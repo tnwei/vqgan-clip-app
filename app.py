@@ -47,7 +47,6 @@ import numpy as np
 
 # Load defaults
 # By default, `defaults.yaml` contains the following:
-# weights: 0
 # num_steps: 100
 # Xdim: 375
 # ydim: 240
@@ -280,6 +279,12 @@ if __name__ == "__main__":
         if i.stem in [j.stem for j in available_weight_configs]
     ]
 
+    # Set vqgan_imagenet_f16_1024 as default if possible
+    if "vqgan_imagenet_f16_1024" in available_weights:
+        default_weight_index = available_weights.index("vqgan_imagenet_f16_1024")
+    else:
+        default_weight_index = 0
+
     # Start of input form
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
@@ -290,7 +295,7 @@ if __name__ == "__main__":
         radio = st.sidebar.radio(
             "Model weights",
             available_weights,
-            index=defaults["weights"],
+            index=default_weight_index,
             help="Choose which weights to load, trained on different datasets. Make sure the weights and configs are downloaded to `assets/` as per the README!",
         )
         num_steps = st.sidebar.number_input(
