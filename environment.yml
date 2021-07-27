@@ -26,7 +26,6 @@ dependencies:
     - stegano
     - python-xmp-toolkit
     - imgtag
-    - gradio
     - einops
     - transformers
 prefix: /home/tnwei/miniconda3/envs/vqgan-clip
