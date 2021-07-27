@@ -53,7 +53,7 @@ import numpy as np
 # ydim: 240
 # set_seed: false
 # seed: 0
-# continue_previous_run: false
+# continue_prev_run: false
 defaults = OmegaConf.load("defaults.yaml")
 
 
