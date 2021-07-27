@@ -270,6 +270,16 @@ if __name__ == "__main__":
     st.set_page_config(page_title="VQGAN-CLIP playground")
     st.title("VQGAN-CLIP playground")
 
+    # Determine what weights are available in `assets/`
+    weights_dir = Path("assets").resolve()
+    available_weight_ckpts = list(weights_dir.glob("*.ckpt"))
+    available_weight_configs = list(weights_dir.glob("*.yaml"))
+    available_weights = [
+        i.stem
+        for i in available_weight_ckpts
+        if i.stem in [j.stem for j in available_weight_configs]
+    ]
+
     # Start of input form
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
@@ -279,17 +289,9 @@ if __name__ == "__main__":
         )
         radio = st.sidebar.radio(
             "Model weights",
-            [
-                "vqgan_imagenet_f16_1024",
-                "vqgan_imagenet_f16_16384",
-                "coco",
-                "faceshq",
-                "sflickr",
-                "wikiart_16384",
-                "wikiart_1024",
-            ],
+            available_weights,
             index=defaults["weights"],
-            help="Choose which weights to load, trained on different datasets",
+            help="Choose which weights to load, trained on different datasets. Make sure the weights and configs are downloaded to `assets/` as per the README!",
         )
         num_steps = st.sidebar.number_input(
             "Num steps",
@@ -338,7 +340,7 @@ if __name__ == "__main__":
             if len(image_prompts) != 0:
                 image_prompts = [Image.open(i) for i in image_prompts]
         else:
-            pass
+            image_prompts = []
 
         continue_prev_run = st.sidebar.checkbox(
             "Continue previous run",

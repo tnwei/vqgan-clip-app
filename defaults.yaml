@@ -1,6 +1,6 @@
 # Modify for different systems, e.g. larger default xdim/ydim for more powerful GPUs
 weights: 0
-num_steps: 100
+num_steps: 500
 Xdim: 375
 ydim: 240
 set_seed: false
