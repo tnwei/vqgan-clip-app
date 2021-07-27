@@ -1,0 +1,8 @@
+# Common Python excludes
+**/.ipynb_checkpoints/
+**/__pycache__/
+
+# VQGAN weights
+assets/*.ckpt
+assets/*.yaml
+
