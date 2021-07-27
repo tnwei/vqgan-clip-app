@@ -1,4 +1,4 @@
-name: vqgan-clip
+name: vqgan-clip-app
 channels:
   - pytorch
   - conda-forge
@@ -28,4 +28,4 @@ dependencies:
     - imgtag
     - einops
     - transformers
-prefix: /home/tnwei/miniconda3/envs/vqgan-clip
+prefix: /home/tnwei/miniconda3/envs/vqgan-clip-app
