@@ -1,0 +1,32 @@
+name: vqgan-clip
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - pytorch::pytorch=1.8.1
+  - pytorch::torchvision=0.9.1
+  - pytorch::torchaudio=0.8.1
+  - cudatoolkit=10.2
+  - omegaconf
+  - pytorch-lightning
+  - tqdm
+  - regex
+  - kornia
+  - ftfy
+  - pip
+  - pillow=7.1.2
+  - python=3.8 # For compatibility
+  - imageio-ffmpeg
+  - ipykernel
+  - imageio
+  - ipywidgets
+  - streamlit
+  - pip:
+    - stegano
+    - python-xmp-toolkit
+    - imgtag
+    - gradio
+    - einops
+    - transformers
+prefix: /home/tnwei/miniconda3/envs/vqgan-clip
