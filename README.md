@@ -4,11 +4,11 @@
 
 VQGAN-CLIP has been in vogue for generating art using deep learning. Searching the `r/deepdream` subreddit for VQGAN-CLIP yields [quite a number of results](https://www.reddit.com/r/deepdream/search?q=vqgan+clip&restrict_sr=on). Basically, [VQGAN](https://github.com/CompVis/taming-transformers) can generate pretty high fidelity images, while [CLIP](https://github.com/openai/CLIP) can produce relevant captions for images. Combined, VQGAN-CLIP can take prompts from human input, and iterate to generate images that fit the prompts.
 
-Thanks to the generosity of creators sharing notebooks on Google Colab, the VQGAN-CLIP technique has seen widespread circulation. However, for regular usage across multiple sessions, I prefer a local setup that can be started up rapidly. Thus, this simple Streamlit app for generating VQGAN-CLIP images on a local environment. 
+Thanks to the generosity of creators sharing notebooks on Google Colab, the VQGAN-CLIP technique has seen widespread circulation. However, for regular usage across multiple sessions, I prefer a local setup that can be started up rapidly. Thus, this simple Streamlit app for generating VQGAN-CLIP images on a local environment. Screenshot of the UI as below:
+
+![Screenshot of the UI](ui.jpeg)
 
 Be advised that you need a beefy GPU with lots of VRAM to generate images large enough to be interesting. (Hello Quadro owners!). For reference, an RTX2060 can barely manage a 300x300 image. Otherwise you are best served using the notebooks on Colab.
-
-<insert screenshot>
 
 Reference is [this Colab notebook](https://colab.research.google.com/drive/1L8oL-vLJXVcRzCFbPwOoMkPKJ8-aYdPN?usp=sharing) originally by Katherine Crowson. 
 
@@ -29,7 +29,7 @@ There is a lot of room for experimentation on this technique. App-related logic 
 
 To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` weights in `assets/`, and ensure that they have the same filename, just with different postfixes. It will then appear in the app interface for use. Refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers) for training VQGAN on your own dataset.
 
-Defaults settings for the app upon startup are specified in `defaults.yaml`, which can be further adjusted as necessary.
+Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
 
 ## Modifications
 
@@ -41,12 +41,27 @@ In addition, uploading image prompts has been greatly simplified compared to usi
 
 ## Notes
 
-+ The image size is bound by GPU VRAM available. The reference notebook default to use 480x480. One of the notebooks in the thoughts section below uses 640x512. For reference, an RTX2060 can barely manage 300x300. You can use image upscaling tools such as [Waifu2X](https://github.com/nagadomi/waifu2x) to further upscale the generated image beyond VRAM limits, but be aware that smaller images fundametally contain less complexity than larger images.
-+ If you're getting a CUDA out of memory error on your first run, it is a sign that the image size is too large. If you were able to generate images of a particular size prior, then you might have a CUDA memory leak and need to restart the application. Still figuring out where the leak is from.
-+ The VQGAN weights in the download links are trained on different datasets. You might find them suitable for generating different art styles. The `sflickr` dataset is skewed towards generating landscape images while the `faceshq` dataset is skewed towards generating faces. 
-+ If you have no artstyle preference, the ImageNet weights do remarkably well. In fact, VQGAN-CLIP can be conditioned to generate specific styles, thanks to the breadth of understanding supplied by the CLIP model (see tips section).
-+ Some weights have multiple versions, e.g. ImageNet 1024 and Image 16384. The number represents the codebook (latent space) dimensionality. For more info, refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers), also linked in the intro above.
-+ There is no ground rule on how many steps to run to get a good image. Images generated are also not guaranteed to be interesting. Experiment! 
+**Generated image size** is bound by GPU VRAM available. The reference notebook default to use 480x480. One of the notebooks in the thoughts section below uses 640x512. For reference, an RTX2060 can barely manage 300x300. You can use image upscaling tools such as [Waifu2X](https://github.com/nagadomi/waifu2x) to further upscale the generated image beyond VRAM limits, but be aware that smaller images fundamentally contain less complexity than larger images. 
+
+Following are GPU VRAM consumption read from`nvidia-smi` as reference, note that your mileage may vary :
+
+| Resolution| VRAM Consumption |
+| ----------| ---------------- |
+| 300 x 300 | 4,829 MiB        |
+| 480 x 480 | 8,465 MiB        |
+| 640 x 480 | 10,247 MiB       |
+| 800 x 600 | 18,157 MiB       |
+| 960 x 720 | 19,777 MiB       |
+| 1024 x 768| 22,167 MiB       |
+| 1280 x 720| 24,353 MiB       |
+
+**CUDA out of memory error** If you're getting a CUDA out of memory error on your first run, it is a sign that the image size is too large. If you were able to generate images of a particular size prior, then you might have a CUDA memory leak and need to restart the application. Still figuring out where the leak is from.
+
+**VQGAN weights and art style** In the download links are trained on different datasets. You might find them suitable for generating different art styles. The `sflickr` dataset is skewed towards generating landscape images while the `faceshq` dataset is skewed towards generating faces. If you have no art style preference, the ImageNet weights do remarkably well. In fact, VQGAN-CLIP can be conditioned to generate specific styles, thanks to the breadth of understanding supplied by the CLIP model (see tips section).
+
+Some weights have multiple versions, e.g. ImageNet 1024 and Image 16384. The number represents the codebook (latent space) dimensionality. For more info, refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers), also linked in the intro above.
+
+**How many steps to run VQGAN-CLIP?** There is no ground rule on how many steps to run to get a good image. Images generated are also not guaranteed to be interesting. Experiment! 
 
 ## Further tips / cool variations from the internet
 
@@ -62,4 +77,5 @@ In addition, uploading image prompts has been greatly simplified compared to usi
 + Dockerfile?
 + This [variation](https://colab.research.google.com/drive/1gFn9u3oPOgsNzJWEFmdK-N9h_y65b8fj) of the Colab notebook implements some form of regularization
 + This [variation](https://colab.research.google.com/drive/1go6YwMFe5MX6XM9tv-cnQiSTU50N9EeT?usp=sharing#scrollTo=EXMSuW2EQWsd) of the Colab notebook lists more options for VQGAN pre-trained weights
-
++ Link up w/ a database so that it's easier to save outputs?
++ Add self-generated image captions from CLIP?
