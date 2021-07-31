@@ -48,8 +48,8 @@ import numpy as np
 # Load defaults
 # By default, `defaults.yaml` contains the following:
 # num_steps: 100
-# Xdim: 375
-# ydim: 240
+# Xdim: 640
+# ydim: 480
 # set_seed: false
 # seed: 0
 # continue_prev_run: false
