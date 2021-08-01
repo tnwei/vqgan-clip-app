@@ -23,6 +23,8 @@ The steps for setup are based on the Colab referenced above. Atm the procedure i
 
 When done, `streamlit run app.py` launches the web app on `localhost:8501`. In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. Both can be saved via the browser's right-click menu.
 
+A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
+
 ## App structure
 
 There is a lot of room for experimentation on this technique. App-related logic is in `app.py`, while most of the underlying logic is stowed away in `utils.py`. Refer to [Streamlit docs](https://docs.streamlit.io/en/stable/index.html) for further info about the web app itself. 
