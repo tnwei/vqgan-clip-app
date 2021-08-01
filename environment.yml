@@ -22,6 +22,7 @@ dependencies:
   - imageio
   - ipywidgets
   - streamlit
+  - ffmpeg
   - pip:
     - stegano
     - python-xmp-toolkit
