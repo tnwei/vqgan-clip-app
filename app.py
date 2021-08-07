@@ -2,8 +2,10 @@ import streamlit as st
 import argparse
 import math
 from pathlib import Path
-
+import sqlite3
 import sys
+import datetime
+import io
 
 sys.path.append("./taming-transformers")
 
@@ -27,6 +29,7 @@ from utils import (
     synth,
     checkin,
 )
+from db import create_table, write_to_db
 from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
@@ -247,6 +250,22 @@ def run(
             writer.append_data(frame)
         writer.close()
 
+        # Save to sqlite
+        imblob = io.BytesIO()
+        im.save(imblob, format="PNG")
+
+        with open("temp.mp4", "rb") as f:
+            animblob = f.read()
+
+        write_to_db(
+            conn,
+            timestamp=datetime.datetime.now(),
+            num_steps=int(step_counter),
+            text_prompt=text_input,
+            output=imblob.getvalue(),
+            animation=animblob,
+        )
+
         status_text.text("Done!")
 
         # End of Stremalit tie-in ----------------------------
@@ -262,10 +281,29 @@ def run(
             writer.append_data(frame)
         writer.close()
 
+        # Save to sqlite
+        imblob = io.BytesIO()
+        im.save(imblob, format="PNG")
+
+        with open("temp.mp4", "rb") as f:
+            animblob = f.read()
+
+        write_to_db(
+            conn,
+            timestamp=datetime.datetime.now(),
+            num_steps=int(step_counter),
+            text_prompt=text_input,
+            output=imblob.getvalue(),
+            animation=animblob,
+        )
+
         status_text.text("Done!")
 
 
 if __name__ == "__main__":
+    conn = sqlite3.connect("db.sqlite")
+    create_table(conn)
+
     st.set_page_config(page_title="VQGAN-CLIP playground")
     st.title("VQGAN-CLIP playground")
 
