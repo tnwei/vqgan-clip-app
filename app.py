@@ -1,22 +1,19 @@
 import streamlit as st
 import argparse
-import math
 from pathlib import Path
-import sqlite3
 import sys
 import datetime
-import io
+import shutil
+import json
 
 sys.path.append("./taming-transformers")
 
 from PIL import Image
-import requests
 import torch
 from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
-from tqdm import tqdm
 from CLIP import clip
 
 from utils import (
@@ -25,11 +22,9 @@ from utils import (
     parse_prompt,
     resize_image,
     Prompt,
-    fetch,
     synth,
     checkin,
 )
-from db import create_table, write_to_db
 from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
@@ -250,21 +245,17 @@ def run(
             writer.append_data(frame)
         writer.close()
 
-        # Save to sqlite
-        imblob = io.BytesIO()
-        im.save(imblob, format="PNG")
+        # Save to output folder if run completed
+        runoutputdir = outputdir / datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        runoutputdir.mkdir()
 
-        with open("temp.mp4", "rb") as f:
-            animblob = f.read()
+        im.save(runoutputdir / "output.PNG", format="PNG")
+        shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
-        write_to_db(
-            conn,
-            timestamp=datetime.datetime.now(),
-            num_steps=int(step_counter),
-            text_prompt=text_input,
-            output=imblob.getvalue(),
-            animation=animblob,
-        )
+        with open(runoutputdir / "details.json", "w") as f:
+            json.dump(
+                {"num_steps": step_counter, "text_input": text_input}, f, indent=4
+            )
 
         status_text.text("Done!")
 
@@ -281,28 +272,25 @@ def run(
             writer.append_data(frame)
         writer.close()
 
-        # Save to sqlite
-        imblob = io.BytesIO()
-        im.save(imblob, format="PNG")
+        # Save to output folder if run completed
+        runoutputdir = outputdir / datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        runoutputdir.mkdir()
 
-        with open("temp.mp4", "rb") as f:
-            animblob = f.read()
+        im.save(runoutputdir / "output.PNG", format="PNG")
+        shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
-        write_to_db(
-            conn,
-            timestamp=datetime.datetime.now(),
-            num_steps=int(step_counter),
-            text_prompt=text_input,
-            output=imblob.getvalue(),
-            animation=animblob,
-        )
+        with open(runoutputdir / "details.txt", "w") as f:
+            json.dump(
+                {"num_steps": step_counter, "text_input": text_input}, f, indent=4
+            )
 
         status_text.text("Done!")
 
 
 if __name__ == "__main__":
-    conn = sqlite3.connect("db.sqlite")
-    create_table(conn)
+    outputdir = Path("output")
+    if not outputdir.exists():
+        outputdir.mkdir()
 
     st.set_page_config(page_title="VQGAN-CLIP playground")
     st.title("VQGAN-CLIP playground")
