@@ -6,7 +6,7 @@ VQGAN-CLIP has been in vogue for generating art using deep learning. Searching t
 
 Thanks to the generosity of creators sharing notebooks on Google Colab, the VQGAN-CLIP technique has seen widespread circulation. However, for regular usage across multiple sessions, I prefer a local setup that can be started up rapidly. Thus, this simple Streamlit app for generating VQGAN-CLIP images on a local environment. Screenshot of the UI as below:
 
-![Screenshot of the UI](ui.jpeg)
+![Screenshot of the UI](docs/ui.jpeg)
 
 Be advised that you need a beefy GPU with lots of VRAM to generate images large enough to be interesting. (Hello Quadro owners!). For reference, an RTX2060 can barely manage a 300x300 image. Otherwise you are best served using the notebooks on Colab.
 
@@ -33,13 +33,17 @@ To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` we
 
 Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
 
-## Modifications
+## Modifications introduced
 
-Added the option to carry over the existing generated image and network weights for use in the next run. If a new image size is specified, the image will be cropped to size accordingly. I see two use cases for this:
-+ Continue iterating on an image: If you like how an image has turned out thus far, you can tell VQGAN-CLIP to keep going. Note that chaining a few consecutive short runs of the same prompt and running a single run using the same prompt with equivalent steps does not yield the same outcome. 
-+ Multi-stage iteration: Iterate upon the same image using different prompts at different stages. For example, you can tell the network to generate "Cowboy singing in the sky", then continue the same image and weights using a different prompt, "Fish on an alien planet under the night sky". Because of how backprop works, the network will find the easiest way to change the previous image to fit the new prompt. Possibilities are endless!
+Added the option to carry over the existing generated image and network weights for use in the next run. If a new image size is specified, the image will be cropped to size accordingly. This allows you to **continue iterating on an image** if you like how it has turned out thus far. Note that chaining a few consecutive short runs of the same prompt and running a single run using the same prompt with equivalent steps does not yield the same outcome. 
 
-In addition, uploading image prompts has been greatly simplified compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
+Extending upon that feature enables **multi-stage iteration**, where the same image can be iterated upon using different prompts at different stages. For example, you can tell the network to generate "Cowboy singing in the sky", then continue the same image and weights using a different prompt, "Fish on an alien planet under the night sky". Because of how backprop works, the network will find the easiest way to change the previous image to fit the new prompt. Should be useful for preserving visual structure between images, and for smoothly transitioning from one scene to another.
+
+Here is an example where "Backyard in spring" is first generated, then iterated upon with prompts "Backyard in summer", "Backyard in autumn", and "Backyard in winter". Major visual elements in the initial image were inherited and utilized across multiple runs.
+
+![](docs/four-seasons-20210808.png)
+
+In addition, **uploading image prompts has been greatly simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
 
 ## Notes
 
@@ -81,3 +85,4 @@ Some weights have multiple versions, e.g. ImageNet 1024 and Image 16384. The num
 + This [variation](https://colab.research.google.com/drive/1go6YwMFe5MX6XM9tv-cnQiSTU50N9EeT?usp=sharing#scrollTo=EXMSuW2EQWsd) of the Colab notebook lists more options for VQGAN pre-trained weights
 + Link up w/ a database so that it's easier to save outputs?
 + Add self-generated image captions from CLIP?
++ Guided diffusion variant: https://colab.research.google.com/drive/1F2M1T2ZQtanFpjBUyId1VaxmqPb4eY5N
