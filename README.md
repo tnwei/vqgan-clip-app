@@ -12,7 +12,7 @@ Be advised that you need a beefy GPU with lots of VRAM to generate images large 
 
 Reference is [this Colab notebook](https://colab.research.google.com/drive/1L8oL-vLJXVcRzCFbPwOoMkPKJ8-aYdPN?usp=sharing) originally by Katherine Crowson. The notebook can also be found in [this repo hosted by EleutherAI](https://github.com/EleutherAI/vqgan-clip).
 
-## Setup and Usage
+## Setup
 
 The steps for setup are based on the Colab referenced above. Atm the procedure is a bit messy, there's probably room for improvement here. 
 
@@ -21,7 +21,11 @@ The steps for setup are based on the Colab referenced above. Atm the procedure i
 3. Install the required Python libraries. Using `conda`, run `conda env create -f environment.yml`
 4. Download the pretrained weights and config files using links in the `download-weights.sh` script. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while. You'll want to at least have both the ImageNet weights, which are used in the reference notebook.
 
-When done, `streamlit run app.py` launches the web app on `localhost:8501`. In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. Both can be saved via the browser's right-click menu.
+## Usage
+
+`streamlit run app.py` launches the web app on `localhost:8501`. In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
+
+In addition, each run's info and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched. 
 
 A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
 
@@ -43,7 +47,7 @@ Here is an example where "Backyard in spring" is first generated, then iterated 
 
 ![](docs/four-seasons-20210808.png)
 
-In addition, **uploading image prompts has been greatly simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
+In addition, **uploading image prompts has been simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
 
 ## Notes
 
