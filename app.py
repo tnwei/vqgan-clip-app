@@ -66,9 +66,15 @@ def run(
     seed: Optional[int] = None,
     **kwargs,  # Use this to receive Streamlit objects
 ):
+
+    # Split text by "|" symbol
+    texts = [phrase.strip() for phrase in text_input.split("|")]
+    if texts == [""]:
+        texts = []
+
     # Leaving most of this untouched
     args = argparse.Namespace(
-        prompts=[text_input],
+        prompts=texts,
         image_prompts=image_prompts,
         noise_prompt_seeds=[],
         noise_prompt_weights=[],
@@ -226,7 +232,7 @@ def run(
             # frames.append(im_byte_arr.getvalue()) # read()
             frames.append(np.asarray(im))
 
-            # End of Stremalit tie-in ------------------------
+            # End of Streamlit tie-in ------------------------
 
             loss = sum(lossAll)
             loss.backward()
@@ -254,12 +260,21 @@ def run(
 
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
-                {"num_steps": step_counter, "text_input": text_input}, f, indent=4
+                {
+                    "num_steps": step_counter,
+                    "text_input": text_input,
+                    "seed": seed,
+                    "Xdim": image_x,
+                    "ydim": image_y,
+                    "vqgan_ckpt": vqgan_ckpt,
+                },
+                f,
+                indent=4,
             )
 
         status_text.text("Done!")
 
-        # End of Stremalit tie-in ----------------------------
+        # End of Streamlit tie-in ----------------------------
 
         return im
 
@@ -281,9 +296,17 @@ def run(
 
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
-                {"num_steps": step_counter, "text_input": text_input}, f, indent=4
+                {
+                    "num_steps": step_counter,
+                    "text_input": text_input,
+                    "seed": seed,
+                    "Xdim": image_x,
+                    "ydim": image_y,
+                    "vqgan_ckpt": vqgan_ckpt,
+                },
+                f,
+                indent=4,
             )
-
         status_text.text("Done!")
 
 
