@@ -279,7 +279,7 @@ def run(
         im.save(runoutputdir / "output.PNG", format="PNG")
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
-        with open(runoutputdir / "details.txt", "w") as f:
+        with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {"num_steps": step_counter, "text_input": text_input}, f, indent=4
             )
