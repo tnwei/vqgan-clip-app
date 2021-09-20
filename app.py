@@ -446,8 +446,25 @@ if __name__ == "__main__":
 
     with st.beta_expander("Expand for README"):
         with open("README.md", "r") as f:
-            description = f.read()
-        st.write(description)
+            # description = f.read()
+            # Preprocess links to redirect to github
+            # Thank you https://discuss.streamlit.io/u/asehmi, works like a charm!
+            # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
+            readme_lines = f.readlines()
+            readme_buffer = []
+            images = ["docs/ui.jpeg", "docs/four-seasons-20210808.png"]
+            for line in readme_lines:
+                readme_buffer.append(line)
+                for image in images:
+                    if image in line:
+                        st.markdown(" ".join(readme_buffer[:-1]))
+                        st.image(
+                            f"https://raw.githubusercontent.com/tnwei/vqgan-clip-app/main/{image}"
+                        )
+                        readme_buffer.clear()
+            st.markdown(" ".join(readme_buffer))
+
+        # st.write(description)
 
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG

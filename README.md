@@ -1,5 +1,7 @@
 # VQGAN-CLIP web app
 
+Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app)
+
 ## Brief intro
 
 VQGAN-CLIP has been in vogue for generating art using deep learning. Searching the `r/deepdream` subreddit for VQGAN-CLIP yields [quite a number of results](https://www.reddit.com/r/deepdream/search?q=vqgan+clip&restrict_sr=on). Basically, [VQGAN](https://github.com/CompVis/taming-transformers) can generate pretty high fidelity images, while [CLIP](https://github.com/openai/CLIP) can produce relevant captions for images. Combined, VQGAN-CLIP can take prompts from human input, and iterate to generate images that fit the prompts.
@@ -25,6 +27,8 @@ The steps for setup are based on the Colab referenced above. Atm the procedure i
 
 `streamlit run app.py` launches the web app on `localhost:8501`. In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
 
+The text prompts allow separating text prompts using the "|" symbol, with custom weightage for each. Example: `A beautiful sunny countryside scene of a Collie dog running towards a herd of sheep in a grassy field with a farmhouse in the background:100 | wild flowers:30 | roses:-30 | photorealistic:20 | V-ray:20 | ray tracing:20 | unreal engine:20`. Refer to [this Reddit post](https://www.reddit.com/r/bigsleep/comments/p15fis/tutorial_an_introduction_for_newbies_to_using_the/) for more info. 
+
 In addition, each run's info and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched. 
 
 A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
@@ -45,7 +49,7 @@ Extending upon that feature enables **multi-stage iteration**, where the same im
 
 Here is an example where "Backyard in spring" is first generated, then iterated upon with prompts "Backyard in summer", "Backyard in autumn", and "Backyard in winter". Major visual elements in the initial image were inherited and utilized across multiple runs.
 
-![](docs/four-seasons-20210808.png)
+![Backyard in spring, summer, autumn and winter](docs/four-seasons-20210808.png)
 
 In addition, **uploading image prompts has been simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
 
