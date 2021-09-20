@@ -29,7 +29,23 @@ The steps for setup are based on the Colab referenced above. Atm the procedure i
 
 The text prompts allow separating text prompts using the "|" symbol, with custom weightage for each. Example: `A beautiful sunny countryside scene of a Collie dog running towards a herd of sheep in a grassy field with a farmhouse in the background:100 | wild flowers:30 | roses:-30 | photorealistic:20 | V-ray:20 | ray tracing:20 | unreal engine:20`. Refer to [this Reddit post](https://www.reddit.com/r/bigsleep/comments/p15fis/tutorial_an_introduction_for_newbies_to_using_the/) for more info. 
 
-In addition, each run's info and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched. 
+In addition, each run's info and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched, as well as a unique run ID. The run ID is preserved across multiple runs if the `continue_prev_run` option is toggled on, making it easier to track multi-stage runs. Example `output` dir:
+
+``` bash
+$ tree output
+├── 20210920T232927-vTf6Aot6
+│   ├── anim.mp4
+│   ├── details.json
+│   └── output.PNG
+├── 20210920T232935-9TJ9YusD
+│   ├── anim.mp4
+│   ├── details.json
+│   └── output.PNG
+└── 20210920T232939-9TJ9YusD # continued run, has same run ID
+    ├── anim.mp4
+    ├── details.json
+    └── output.PNG
+```
 
 A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
 
