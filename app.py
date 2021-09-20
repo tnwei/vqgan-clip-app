@@ -61,7 +61,8 @@ def run(
     num_steps: int = 300,
     image_x: int = 300,
     image_y: int = 300,
-    image_prompts: List = [],
+    init_image: Optional[Image.Image] = None,
+    image_prompts: List[Image.Image] = [],
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
     **kwargs,  # Use this to receive Streamlit objects
@@ -79,7 +80,7 @@ def run(
         noise_prompt_seeds=[],
         noise_prompt_weights=[],
         size=[int(image_x), int(image_y)],
-        # init_image=None,
+        init_image=init_image,
         init_weight=0.0,
         # clip.available_models()
         # ['RN50', 'RN101', 'RN50x4', 'ViT-B/32']
@@ -140,13 +141,13 @@ def run(
     else:
         seed = torch.seed()  # Trigger a seed, retrieve the utilized seed
 
-    # if args.init_image:
-    #     pil_image = Image.open(fetch(args.init_image)).convert('RGB')
+    # Initialization order: continue_prev_im, init_image, then only random init
     if continue_prev_run:
-        # Streamlit tie-in -----------------------------------
         pil_image = st.session_state["prev_im"]
-        # End of Streamlit tie-in ----------------------------
-
+        pil_image = pil_image.resize((sideX, sideY), Image.LANCZOS)
+        z, *_ = model.encode(TF.to_tensor(pil_image).to(device).unsqueeze(0) * 2 - 1)
+    elif args.init_image:
+        pil_image = args.init_image
         pil_image = pil_image.resize((sideX, sideY), Image.LANCZOS)
         z, *_ = model.encode(TF.to_tensor(pil_image).to(device).unsqueeze(0) * 2 - 1)
     else:
@@ -381,14 +382,36 @@ if __name__ == "__main__":
             seed = None
 
         use_custom_starting_image = st.sidebar.checkbox(
+            "Use starting image",
+            value=defaults["use_starting_image"],
+            help="Check to add a starting image to the network",
+        )
+
+        starting_image_widget = st.sidebar.empty()
+        if use_custom_starting_image is True:
+            init_image = starting_image_widget.file_uploader(
+                "Upload starting image",
+                type=["png", "jpeg", "jpg"],
+                accept_multiple_files=False,
+                help="Starting image for the network, will be resized to fit specified dimensions",
+            )
+            # Convert from UploadedFile object to PIL Image
+            if init_image is not None:
+                init_image: Image.Image = Image.open(init_image).convert(
+                    "RGB"
+                )  # just to be sure
+        else:
+            init_image = None
+
+        use_image_prompts = st.sidebar.checkbox(
             "Add image prompt(s)",
             value=defaults["use_image_prompts"],
             help="Check to add image prompt(s), conditions the network similar to the text prompt",
         )
 
-        starting_image_widget = st.sidebar.empty()
-        if use_custom_starting_image is True:
-            image_prompts = starting_image_widget.file_uploader(
+        image_prompts_widget = st.sidebar.empty()
+        if use_image_prompts is True:
+            image_prompts = image_prompts_widget.file_uploader(
                 "Upload image prompts(s)",
                 type=["png", "jpeg", "jpg"],
                 accept_multiple_files=True,
@@ -396,14 +419,14 @@ if __name__ == "__main__":
             )
             # Convert from UploadedFile object to PIL Image
             if len(image_prompts) != 0:
-                image_prompts = [Image.open(i) for i in image_prompts]
+                image_prompts = [Image.open(i).convert("RGB") for i in image_prompts]
         else:
             image_prompts = []
 
         continue_prev_run = st.sidebar.checkbox(
             "Continue previous run",
             value=defaults["continue_prev_run"],
-            help="Use existing image and existing weights for the next run",
+            help="Use existing image and existing weights for the next run. If yes, ignores 'Use starting image'",
         )
         submitted = st.form_submit_button("Run!")
         # End of form
@@ -437,6 +460,7 @@ if __name__ == "__main__":
             image_x=int(image_x),
             image_y=int(image_y),
             seed=int(seed) if set_seed is True else None,
+            init_image=init_image,
             image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
             im_display_slot=im_display_slot,

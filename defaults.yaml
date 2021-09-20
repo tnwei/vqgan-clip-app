@@ -4,5 +4,6 @@ Xdim: 640
 ydim: 480
 set_seed: false
 seed: 0
+use_starting_image: false
 use_image_prompts: false
 continue_prev_run: false
