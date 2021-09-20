@@ -5,6 +5,8 @@ import sys
 import datetime
 import shutil
 import json
+import os
+import base64
 
 sys.path.append("./taming-transformers")
 
@@ -102,6 +104,7 @@ def run(
         # Streamlit tie-in -----------------------------------
         model = st.session_state["model"]
         perceptor = st.session_state["perceptor"]
+        run_id = st.session_state["run_id"]
         # End of Streamlit tie-in ----------------------------
 
     else:
@@ -118,11 +121,19 @@ def run(
         model = st.session_state["model"] = load_vqgan_model(
             args.vqgan_config, args.vqgan_checkpoint
         ).to(device)
+
         perceptor = st.session_state["perceptor"] = (
             clip.load(args.clip_model, jit=False)[0]
             .eval()
             .requires_grad_(False)
             .to(device)
+        )
+
+        # Generate random run ID
+        # Used to link runs linked w/ continue_prev_run
+        # ref: https://stackoverflow.com/a/42703382/13095028
+        run_id = st.session_state["run_id"] = base64.b64encode(os.urandom(6)).decode(
+            "ascii"
         )
         # End of Streamlit tie-in ----------------------------
 
@@ -255,7 +266,9 @@ def run(
         writer.close()
 
         # Save to output folder if run completed
-        runoutputdir = outputdir / datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        runoutputdir = outputdir / (
+            datetime.datetime.now().strftime("%Y%m%dT%H%M%S") + "-" + run_id
+        )
         runoutputdir.mkdir()
 
         im.save(runoutputdir / "output.PNG", format="PNG")
@@ -264,9 +277,12 @@ def run(
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
+                    "run_id": run_id,
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
+                    "init_image": False if init_image is None else True,
+                    "continue_prev_run": continue_prev_run,
                     "seed": seed,
                     "Xdim": image_x,
                     "ydim": image_y,
@@ -292,7 +308,9 @@ def run(
         writer.close()
 
         # Save to output folder if run completed
-        runoutputdir = outputdir / datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        runoutputdir = outputdir / (
+            datetime.datetime.now().strftime("%Y%m%dT%H%M%S") + "-" + run_id
+        )
         runoutputdir.mkdir()
 
         im.save(runoutputdir / "output.PNG", format="PNG")
@@ -301,9 +319,12 @@ def run(
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
+                    "run_id": run_id,
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
+                    "init_image": False if init_image is None else True,
+                    "continue_prev_run": continue_prev_run,
                     "seed": seed,
                     "Xdim": image_x,
                     "ydim": image_y,
