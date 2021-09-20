@@ -135,8 +135,10 @@ def run(
     z_min = model.quantize.embedding.weight.min(dim=0).values[None, :, None, None]
     z_max = model.quantize.embedding.weight.max(dim=0).values[None, :, None, None]
 
-    if args.seed is not None:
-        torch.manual_seed(args.seed)
+    if seed is not None:
+        torch.manual_seed(seed)
+    else:
+        seed = torch.seed()  # Trigger a seed, retrieve the utilized seed
 
     # if args.init_image:
     #     pil_image = Image.open(fetch(args.init_image)).convert('RGB')
@@ -262,6 +264,7 @@ def run(
             json.dump(
                 {
                     "num_steps": step_counter,
+                    "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "seed": seed,
                     "Xdim": image_x,
@@ -298,6 +301,7 @@ def run(
             json.dump(
                 {
                     "num_steps": step_counter,
+                    "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "seed": seed,
                     "Xdim": image_x,
