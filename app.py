@@ -132,9 +132,10 @@ def run(
         # Generate random run ID
         # Used to link runs linked w/ continue_prev_run
         # ref: https://stackoverflow.com/a/42703382/13095028
-        run_id = st.session_state["run_id"] = base64.b64encode(os.urandom(6)).decode(
-            "ascii"
-        )
+        # Use URL and filesystem safe version since we're using this as a folder name
+        run_id = st.session_state["run_id"] = base64.urlsafe_b64encode(
+            os.urandom(6)
+        ).decode("ascii")
         # End of Streamlit tie-in ----------------------------
 
     cut_size = perceptor.visual.input_resolution
