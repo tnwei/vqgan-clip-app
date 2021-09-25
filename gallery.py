@@ -11,7 +11,11 @@ def update_runs(fdir):
     for i in sorted(fdir.iterdir(), reverse=True):
         # If is a folder and contains images and metadata
         if i.is_dir() and (i / "details.json").exists() and (i / "output.PNG").exists():
-            runs.append(ModelRun(i))
+            try:
+                runs.append(ModelRun(i))
+            except Exception as e:
+                print(f"Skipped {i} due to raised exception {e}")
+                pass
     return runs
 
 
