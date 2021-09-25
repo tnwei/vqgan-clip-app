@@ -73,7 +73,7 @@ Extending upon that feature enables **multi-stage iteration**, where the same im
 
 Here is an example where "Backyard in spring" is first generated, then iterated upon with prompts "Backyard in summer", "Backyard in autumn", and "Backyard in winter". Major visual elements in the initial image were inherited and utilized across multiple runs.
 
-![Backyard in spring, summer, autumn and winter](docs/four-seasons-20210808.png)
+![Backyard in spring, summer, autumn and winter](docs/four-seasons-20210808.jpg)
 
 In addition, **uploading image prompts has been simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
 
