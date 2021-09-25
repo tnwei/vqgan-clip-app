@@ -14,7 +14,6 @@ dependencies:
   - regex
   - kornia
   - ftfy
-  - pip
   - pillow=7.1.2
   - python=3.8 # For compatibility
   - imageio-ffmpeg
@@ -25,10 +24,12 @@ dependencies:
   - ffmpeg
   - pyyaml
   - flask
+  - pip
   - pip:
-    - stegano
-    - python-xmp-toolkit
-    - imgtag
+    # - stegano
+    # - python-xmp-toolkit
+    # - imgtag
     - einops
     - transformers
+    - git+https://github.com/openai/CLIP
 prefix: /home/tnwei/miniconda3/envs/vqgan-clip-app

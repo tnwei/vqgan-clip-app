@@ -16,7 +16,7 @@ from torch import optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
-from CLIP import clip
+import clip
 
 from utils import (
     load_vqgan_model,

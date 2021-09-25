@@ -18,10 +18,9 @@ Reference is [this Colab notebook](https://colab.research.google.com/drive/1L8oL
 
 The steps for setup are based on the Colab referenced above. Atm the procedure is a bit messy, there's probably room for improvement here. 
 
-1. Git clone this repo. After that, `cd` into the repo and run: `git clone https://github.com/openai/CLIP` and `git clone https://github.com/CompVis/taming-transformers`.
-2. Install `exempi` from your system's package manager. On Debian-based systems, should be `sudo apt install exempi`. 
-3. Install the required Python libraries. Using `conda`, run `conda env create -f environment.yml`
-4. Download the pretrained weights and config files using links in the `download-weights.sh` script. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while. You'll want to at least have both the ImageNet weights, which are used in the reference notebook.
+1. Install the required Python libraries. Using `conda`, run `conda env create -f environment.yml`
+2. Git clone this repo. After that, `cd` into the repo and run: `git clone https://github.com/CompVis/taming-transformers`. (Update to pip install when either of [these](https://github.com/CompVis/taming-transformers/pull/89) [two](https://github.com/CompVis/taming-transformers/pull/81) PRs are merged)
+3. Download the pretrained weights and config files using links in the `download-weights.sh` script. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while. You'll want to at least have both the ImageNet weights, which are used in the reference notebook.
 
 ## Usage
 
