@@ -138,6 +138,9 @@ def run(
     run_id = st.session_state["run_id"] = base64.urlsafe_b64encode(
         os.urandom(6)
     ).decode("ascii")
+
+    run_start_dt = datetime.datetime.now()
+
     # End of Streamlit tie-in ----------------------------
 
     cut_size = perceptor.visual.input_resolution
@@ -270,7 +273,7 @@ def run(
 
         # Save to output folder if run completed
         runoutputdir = outputdir / (
-            datetime.datetime.now().strftime("%Y%m%dT%H%M%S") + "-" + run_id
+            run_start_dt.strftime("%Y%m%dT%H%M%S") + "-" + run_id
         )
         runoutputdir.mkdir()
 
@@ -291,6 +294,8 @@ def run(
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
+                    "start_time": run_start_dt,
+                    "end_time": datetime.datetime.now(),
                 },
                 f,
                 indent=4,
@@ -313,7 +318,7 @@ def run(
 
         # Save to output folder if run completed
         runoutputdir = outputdir / (
-            datetime.datetime.now().strftime("%Y%m%dT%H%M%S") + "-" + run_id
+            run_start_dt.strftime("%Y%m%dT%H%M%S") + "-" + run_id
         )
         runoutputdir.mkdir()
 
@@ -334,6 +339,8 @@ def run(
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
+                    "start_time": run_start_dt,
+                    "end_time": datetime.datetime.now(),
                 },
                 f,
                 indent=4,
