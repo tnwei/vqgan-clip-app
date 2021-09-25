@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+
+  <title>VQGAN-CLIP output gallery</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <h1 class="text-center">VQGAN-CLIP output gallery</h1>
+    </div>
+    <div class="row">
+      <small class="text-muted text-center">
+        <span class="text-decoration-underline">Output folder</span>: <span class="fst-italic">{{ fdir }}</span>
+        <br>
+        <span class="text-decoration-underline">Total runs</span>: {{ runs|length }}
+      </small>
+    </div>
+
+    <br>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+      {% for run in runs %}
+      <div class="col">
+        <div class="card h-100">
+          <a href="{{ url_for('static', filename=run.impath) }}"><img class="card-img-top"
+              src="{{ url_for('static', filename=run.impath) }}" alt="Output Image" id="im" data-bs-toggle="tooltip"
+              data-bs-placement="top" title="Click to view full size"></a>
+          <div class="card-body">
+            <h5 class="card-title">{{ run.details.text_input }}</h5>
+            <p class="card-text"><small class="text-muted">
+
+                <ul>
+                  {% for i, j in run.details.items() %}
+                  <!-- Jinja operator ref: https://stackoverflow.com/a/9856693/13095028 -->
+                  <li>{{ i ~ ': ' ~ j }} </li>
+                  {% endfor %}
+                </ul>
+              </small></p>
+
+            {% if run.animpath is not none %}
+            <p class="card-text"><a href="{{ url_for('static', filename=run.animpath) }}">Link to animation</a></p>
+            {% endif %}
+
+
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <br>
+    <!-- Page footer -->
+    <div class="row">
+      <small class="text-muted text-end">
+        Code: <a href="https://github.com/tnwei/vqgan-clip-app">tnwei/vqgan-clip-app</a>
+      </small>
+    </div>
+    <br>
+  </div>
+
+
+
+</body>

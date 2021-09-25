@@ -23,6 +23,8 @@ dependencies:
   - ipywidgets
   - streamlit
   - ffmpeg
+  - pyyaml
+  - flask
   - pip:
     - stegano
     - python-xmp-toolkit

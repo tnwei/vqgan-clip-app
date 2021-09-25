@@ -25,11 +25,17 @@ The steps for setup are based on the Colab referenced above. Atm the procedure i
 
 ## Usage
 
-`streamlit run app.py` launches the web app on `localhost:8501`. In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
+`streamlit run app.py` launches the web app on `localhost:8501`, while `python gallery.py` launches a gallery viewer on `localhost:5000`. 
+
+In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
 
 The text prompts allow separating text prompts using the "|" symbol, with custom weightage for each. Example: `A beautiful sunny countryside scene of a Collie dog running towards a herd of sheep in a grassy field with a farmhouse in the background:100 | wild flowers:30 | roses:-30 | photorealistic:20 | V-ray:20 | ray tracing:20 | unreal engine:20`. Refer to [this Reddit post](https://www.reddit.com/r/bigsleep/comments/p15fis/tutorial_an_introduction_for_newbies_to_using_the/) for more info. 
 
-In addition, each run's metadata and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched, as well as a unique run ID. Example `output` dir:
+A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
+
+## Output and gallery viewer
+
+Each run's metadata and output is saved to the `output/` directory, organized into subfolders named using the timestamp when a run is launched, as well as a unique run ID. Example `output` dir:
 
 ``` bash
 $ tree output
@@ -37,25 +43,27 @@ $ tree output
 │   ├── anim.mp4
 │   ├── details.json
 │   └── output.PNG
-├── 20210920T232935-9TJ9YusD
-│   ├── anim.mp4
-│   ├── details.json
-│   └── output.PNG
-└── 20210920T232939-9TJ9YusD # continued run, has same run ID
+└── 20210920T232935-9TJ9YusD
     ├── anim.mp4
     ├── details.json
     └── output.PNG
 ```
 
-A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
+The gallery viewer reads from `output/` and visualizes previous runs together with saved metadata. 
+
+![Screenshot of the gallery viewer](docs/gallery.jpg)
 
 ## App structure
+
+<!-- move to ARCHITECTURE.md? -->
 
 There is a lot of room for experimentation on this technique. App-related logic is in `app.py`, while most of the underlying logic is stowed away in `utils.py`. Refer to [Streamlit docs](https://docs.streamlit.io/en/stable/index.html) for further info about the web app itself. 
 
 To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` weights in `assets/`, and ensure that they have the same filename, just with different postfixes. It will then appear in the app interface for use. Refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers) for training VQGAN on your own dataset.
 
 Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
+
+`gallery.py` uses Flask and Jinja templating to serve a simple Bootstrap dashboard.
 
 ## Modifications introduced
 
