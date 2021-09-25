@@ -32,29 +32,6 @@ from omegaconf import OmegaConf
 import imageio
 import numpy as np
 
-# Hacky method to preserve state
-# class State:
-#     model = None
-#     perceptor = None
-#     prev_im = None
-#
-# state = State()
-
-# Preserve state in Streamlit
-# st.session_state["model"] = None
-# st.session_state["perceptor"] = None
-# st.session_state["prev_im"] = None
-
-# Load defaults
-# By default, `defaults.yaml` contains the following:
-# num_steps: 100
-# Xdim: 640
-# ydim: 480
-# set_seed: false
-# seed: 0
-# continue_prev_run: false
-defaults = OmegaConf.load("defaults.yaml")
-
 
 def run(
     # Inputs
@@ -349,6 +326,7 @@ def run(
 
 
 if __name__ == "__main__":
+    defaults = OmegaConf.load("defaults.yaml")
     outputdir = Path("output")
     if not outputdir.exists():
         outputdir.mkdir()

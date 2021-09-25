@@ -6,3 +6,8 @@
 assets/*.ckpt
 assets/*.yaml
 
+# Outputs
+output*
+
+# Test data
+test-samples/

@@ -8,7 +8,7 @@ from taming.models import cond_transformer, vqgan
 from PIL import Image
 from torchvision.transforms import functional as TF
 from tqdm import tqdm
-
+import requests
 import sys
 
 sys.path.append("./taming-transformers")
