@@ -34,7 +34,7 @@
         <div class="card h-100">
           <a href="{{ url_for('static', filename=run.impath) }}"><img class="card-img-top"
               src="{{ url_for('static', filename=run.impath) }}" alt="Output Image" id="im" data-bs-toggle="tooltip"
-              data-bs-placement="top" title="Click to view full size"></a>
+              data-bs-placement="top" title="Click to view full size" style="max-height:300px"></a>
           <div class="card-body">
             <h5 class="card-title">{{ run.details.text_input }}</h5>
             <p class="card-text"><small class="text-muted">
