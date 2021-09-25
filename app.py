@@ -12,7 +12,7 @@ sys.path.append("./taming-transformers")
 
 from PIL import Image
 import torch
-from torch import nn, optim
+from torch import optim
 from torch.nn import functional as F
 from torchvision import transforms
 from torchvision.transforms import functional as TF
@@ -271,8 +271,8 @@ def run(
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
-                    "start_time": run_start_dt,
-                    "end_time": datetime.datetime.now(),
+                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
                 },
                 f,
                 indent=4,
@@ -316,8 +316,8 @@ def run(
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
-                    "start_time": run_start_dt,
-                    "end_time": datetime.datetime.now(),
+                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
                 },
                 f,
                 indent=4,
