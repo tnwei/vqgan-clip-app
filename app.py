@@ -104,7 +104,7 @@ def run(
         # Streamlit tie-in -----------------------------------
         model = st.session_state["model"]
         perceptor = st.session_state["perceptor"]
-        run_id = st.session_state["run_id"]
+        prev_run_id = st.session_state["run_id"].copy()
         # End of Streamlit tie-in ----------------------------
 
     else:
@@ -129,14 +129,16 @@ def run(
             .to(device)
         )
 
-        # Generate random run ID
-        # Used to link runs linked w/ continue_prev_run
-        # ref: https://stackoverflow.com/a/42703382/13095028
-        # Use URL and filesystem safe version since we're using this as a folder name
-        run_id = st.session_state["run_id"] = base64.urlsafe_b64encode(
-            os.urandom(6)
-        ).decode("ascii")
-        # End of Streamlit tie-in ----------------------------
+        prev_run_id = None
+
+    # Generate random run ID
+    # Used to link runs linked w/ continue_prev_run
+    # ref: https://stackoverflow.com/a/42703382/13095028
+    # Use URL and filesystem safe version since we're using this as a folder name
+    run_id = st.session_state["run_id"] = base64.urlsafe_b64encode(
+        os.urandom(6)
+    ).decode("ascii")
+    # End of Streamlit tie-in ----------------------------
 
     cut_size = perceptor.visual.input_resolution
     e_dim = model.quantize.e_dim
@@ -284,6 +286,7 @@ def run(
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
                     "continue_prev_run": continue_prev_run,
+                    "prev_run_id": prev_run_id,
                     "seed": seed,
                     "Xdim": image_x,
                     "ydim": image_y,
@@ -326,6 +329,7 @@ def run(
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
                     "continue_prev_run": continue_prev_run,
+                    "prev_run_id": prev_run_id,
                     "seed": seed,
                     "Xdim": image_x,
                     "ydim": image_y,
