@@ -1,5 +1,4 @@
 import streamlit as st
-import argparse
 from pathlib import Path
 import sys
 import datetime
@@ -11,30 +10,14 @@ import base64
 sys.path.append("./taming-transformers")
 
 from PIL import Image
-import torch
-from torch import optim
-from torch.nn import functional as F
-from torchvision import transforms
-from torchvision.transforms import functional as TF
-import clip
-
-from utils import (
-    load_vqgan_model,
-    MakeCutouts,
-    parse_prompt,
-    resize_image,
-    Prompt,
-    synth,
-    checkin,
-)
 from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
 import numpy as np
+from logic import VQGANCLIPRun
 
 
-def run(
-    # Inputs
+def generate_image(
     text_input: str = "the first day of the waters",
     vqgan_ckpt: str = "vqgan_imagenet_f16_16384",
     num_steps: int = 300,
@@ -44,48 +27,31 @@ def run(
     image_prompts: List[Image.Image] = [],
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
-    **kwargs,  # Use this to receive Streamlit objects
-):
+) -> None:
 
-    # Split text by "|" symbol
-    texts = [phrase.strip() for phrase in text_input.split("|")]
-    if texts == [""]:
-        texts = []
-
-    # Leaving most of this untouched
-    args = argparse.Namespace(
-        prompts=texts,
-        image_prompts=image_prompts,
-        noise_prompt_seeds=[],
-        noise_prompt_weights=[],
-        size=[int(image_x), int(image_y)],
-        init_image=init_image,
-        init_weight=0.0,
-        # clip.available_models()
-        # ['RN50', 'RN101', 'RN50x4', 'ViT-B/32']
-        # Visual Transformer seems to be the smallest
-        clip_model="ViT-B/32",
-        vqgan_config=f"assets/{vqgan_ckpt}.yaml",
-        vqgan_checkpoint=f"assets/{vqgan_ckpt}.ckpt",
-        step_size=0.05,
-        cutn=64,
-        cut_pow=1.0,
-        display_freq=50,
+    ### Init -------------------------------------------------------------------
+    run = VQGANCLIPRun(
+        text_input=text_input,
+        vqgan_ckpt=vqgan_ckpt,
+        num_steps=num_steps,
+        image_x=image_x,
+        image_y=image_y,
         seed=seed,
+        init_image=init_image,
+        image_prompts=image_prompts,
+        continue_prev_run=continue_prev_run,
     )
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("Using device:", device)
+    ### Load model -------------------------------------------------------------
 
     if continue_prev_run is True:
-        # Streamlit tie-in -----------------------------------
-        model = st.session_state["model"]
-        perceptor = st.session_state["perceptor"]
+        run.load_model(
+            prev_model=st.session_state["model"],
+            prev_perceptor=st.session_state["perceptor"],
+        )
         prev_run_id = st.session_state["run_id"].copy()
-        # End of Streamlit tie-in ----------------------------
 
     else:
-        # Streamlit tie-in -----------------------------------
         # Remove the cache first! CUDA out of memory
         if "model" in st.session_state:
             del st.session_state["model"]
@@ -93,19 +59,7 @@ def run(
         if "perceptor" in st.session_state:
             del st.session_state["perceptor"]
 
-        # debug_slot.write(st.session_state) # DEBUG
-
-        model = st.session_state["model"] = load_vqgan_model(
-            args.vqgan_config, args.vqgan_checkpoint
-        ).to(device)
-
-        perceptor = st.session_state["perceptor"] = (
-            clip.load(args.clip_model, jit=False)[0]
-            .eval()
-            .requires_grad_(False)
-            .to(device)
-        )
-
+        st.session_state["model"], st.session_state["perceptor"] = run.load_model()
         prev_run_id = None
 
     # Generate random run ID
@@ -118,85 +72,10 @@ def run(
 
     run_start_dt = datetime.datetime.now()
 
-    # End of Streamlit tie-in ----------------------------
+    ### Model init -------------------------------------------------------------
+    run.model_init()
 
-    cut_size = perceptor.visual.input_resolution
-    e_dim = model.quantize.e_dim
-    f = 2 ** (model.decoder.num_resolutions - 1)
-    make_cutouts = MakeCutouts(cut_size, args.cutn, cut_pow=args.cut_pow)
-    n_toks = model.quantize.n_e
-    toksX, toksY = args.size[0] // f, args.size[1] // f
-    sideX, sideY = toksX * f, toksY * f
-    z_min = model.quantize.embedding.weight.min(dim=0).values[None, :, None, None]
-    z_max = model.quantize.embedding.weight.max(dim=0).values[None, :, None, None]
-
-    if seed is not None:
-        torch.manual_seed(seed)
-    else:
-        seed = torch.seed()  # Trigger a seed, retrieve the utilized seed
-
-    # Initialization order: continue_prev_im, init_image, then only random init
-    if continue_prev_run:
-        pil_image = st.session_state["prev_im"]
-        pil_image = pil_image.resize((sideX, sideY), Image.LANCZOS)
-        z, *_ = model.encode(TF.to_tensor(pil_image).to(device).unsqueeze(0) * 2 - 1)
-    elif args.init_image:
-        pil_image = args.init_image
-        pil_image = pil_image.resize((sideX, sideY), Image.LANCZOS)
-        z, *_ = model.encode(TF.to_tensor(pil_image).to(device).unsqueeze(0) * 2 - 1)
-    else:
-        one_hot = F.one_hot(
-            torch.randint(n_toks, [toksY * toksX], device=device), n_toks
-        ).float()
-        z = one_hot @ model.quantize.embedding.weight
-        z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
-    z_orig = z.clone()
-    z.requires_grad_(True)
-    opt = optim.Adam([z], lr=args.step_size)
-
-    normalize = transforms.Normalize(
-        mean=[0.48145466, 0.4578275, 0.40821073],
-        std=[0.26862954, 0.26130258, 0.27577711],
-    )
-
-    pMs = []
-
-    for prompt in args.prompts:
-        txt, weight, stop = parse_prompt(prompt)
-        embed = perceptor.encode_text(clip.tokenize(txt).to(device)).float()
-        pMs.append(Prompt(embed, weight, stop).to(device))
-
-    # Streamlit tie-in -----------------------------------------------------------------
-    for uploaded_image in args.image_prompts:
-        # path, weight, stop = parse_prompt(prompt)
-        # img = resize_image(Image.open(fetch(path)).convert("RGB"), (sideX, sideY))
-        img = resize_image(uploaded_image.convert("RGB"), (sideX, sideY))
-        batch = make_cutouts(TF.to_tensor(img).unsqueeze(0).to(device))
-        embed = perceptor.encode_image(normalize(batch)).float()
-        pMs.append(Prompt(embed, weight, stop).to(device))
-    # End of Streamlit tie-in ----------------------------------------------------------
-
-    for seed, weight in zip(args.noise_prompt_seeds, args.noise_prompt_weights):
-        gen = torch.Generator().manual_seed(seed)
-        embed = torch.empty([1, perceptor.visual.output_dim]).normal_(generator=gen)
-        pMs.append(Prompt(embed, weight).to(device))
-
-    def ascend_txt():
-        out = synth(model, z)
-        iii = perceptor.encode_image(normalize(make_cutouts(out))).float()
-
-        result = []
-
-        if args.init_weight:
-            result.append(F.mse_loss(z, z_orig) * args.init_weight / 2)
-
-        for prompt in pMs:
-            result.append(prompt(iii))
-
-        return result
-
-    # Streamlit tie-in -----------------------------------
-
+    ### Iterate ----------------------------------------------------------------
     step_counter = 0
     frames = []
 
@@ -207,12 +86,12 @@ def run(
         # This is intended to prevent the model settings from crowding the main body
         # However, touching any button resets the app state, making it impossible to
         # implement a stop button that can still dump output
+        # Thankfully there's a built-in stop button :)
         while True:
             # While loop to accomodate running predetermined steps or running indefinitely
             status_text.text(f"Running step {step_counter}")
-            opt.zero_grad()
-            lossAll = ascend_txt()
-            im = checkin(step_counter, lossAll, model, z)
+
+            _, im = run.iterate()
 
             if num_steps > 0:  # skip when num_steps = -1
                 step_progress_bar.progress((step_counter + 1) / num_steps)
@@ -228,14 +107,6 @@ def run(
             # im.save(im_byte_arr, format="JPEG")
             # frames.append(im_byte_arr.getvalue()) # read()
             frames.append(np.asarray(im))
-
-            # End of Streamlit tie-in ------------------------
-
-            loss = sum(lossAll)
-            loss.backward()
-            opt.step()
-            with torch.no_grad():
-                z.copy_(z.maximum(z_min).minimum(z_max))
 
             step_counter += 1
 
@@ -278,11 +149,7 @@ def run(
                 indent=4,
             )
 
-        status_text.text("Done!")
-
-        # End of Streamlit tie-in ----------------------------
-
-        return im
+        status_text.text("Done!")  # End of run
 
     except st.script_runner.StopException as e:
         # Dump output to dashboard
@@ -322,7 +189,7 @@ def run(
                 f,
                 indent=4,
             )
-        status_text.text("Done!")
+        status_text.text("Done!")  # End of run
 
 
 if __name__ == "__main__":
@@ -480,7 +347,7 @@ if __name__ == "__main__":
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG
         status_text.text("Loading weights ...")
-        im = run(
+        generate_image(
             # Inputs
             text_input=text_input,
             vqgan_ckpt=radio,
@@ -491,9 +358,6 @@ if __name__ == "__main__":
             init_image=init_image,
             image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
-            im_display_slot=im_display_slot,
-            step_progress_bar=step_progress_bar,
-            status_text=status_text,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG

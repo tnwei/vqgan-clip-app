@@ -1,13 +1,12 @@
 import math
 import torch
-from torch import nn, optim
+from torch import nn
 import torch.nn.functional as F
 import io
 from omegaconf import OmegaConf
 from taming.models import cond_transformer, vqgan
 from PIL import Image
 from torchvision.transforms import functional as TF
-from tqdm import tqdm
 import requests
 import sys
 
@@ -198,9 +197,9 @@ def synth(model, z):
 
 
 @torch.no_grad()
-def checkin(i, losses, model, z):
-    losses_str = ", ".join(f"{loss.item():g}" for loss in losses)
-    tqdm.write(f"i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}")
+def checkin(model, z):
+    # losses_str = ", ".join(f"{loss.item():g}" for loss in losses)
+    # tqdm.write(f"i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}")
     out = synth(model, z)
     im = TF.to_pil_image(out[0].cpu())
     return im
