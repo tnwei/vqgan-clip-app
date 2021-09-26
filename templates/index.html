@@ -37,20 +37,24 @@
               data-bs-placement="top" title="Click to view full size" style="max-height:300px"></a>
           <div class="card-body">
             <h5 class="card-title">{{ run.details.text_input }}</h5>
-            <p class="card-text"><small class="text-muted">
 
+            {% if not kiosk %}
+            <p class="card-text">
+              <small class="text-muted">
                 <ul>
                   {% for i, j in run.details.items() %}
                   <!-- Jinja operator ref: https://stackoverflow.com/a/9856693/13095028 -->
                   <li>{{ i ~ ': ' ~ j }} </li>
                   {% endfor %}
                 </ul>
-              </small></p>
+              </small>
+            </p>
 
             {% if run.animpath is not none %}
             <p class="card-text"><a href="{{ url_for('static', filename=run.animpath) }}">Link to animation</a></p>
             {% endif %}
 
+            {% endif %}
 
           </div>
         </div>

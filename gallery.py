@@ -28,6 +28,12 @@ if __name__ == "__main__":
         nargs="?",
         default="./output/",
     )
+    parser.add_argument(
+        "--kiosk",
+        help="Omit showing run details on dashboard",
+        default=False,
+        action="store_true",
+    )
     args = parser.parse_args()
 
     fdir = Path(args.path)
@@ -44,7 +50,7 @@ if __name__ == "__main__":
     @app.route("/")
     def home():
         runs = update_runs(fdir)  # Updates new results when refreshed
-        return render_template("index.html", runs=runs, fdir=fdir)
+        return render_template("index.html", runs=runs, fdir=fdir, kiosk=args.kiosk)
 
     @app.route("/findurl")
     def findurl(path, filename):
