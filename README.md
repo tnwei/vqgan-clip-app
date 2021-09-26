@@ -52,6 +52,8 @@ The gallery viewer reads from `output/` and visualizes previous runs together wi
 
 ![Screenshot of the gallery viewer](docs/gallery.jpg)
 
+If the details are too much, call `python gallery.py --kiosk` instead to only show the images and their prompts.
+
 ## App structure
 
 <!-- move to ARCHITECTURE.md? -->
