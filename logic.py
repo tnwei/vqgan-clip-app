@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple
 from PIL import Image
 import argparse
 import clip
-from utils import (
+from vqgan_utils import (
     load_vqgan_model,
     MakeCutouts,
     parse_prompt,

@@ -1,3 +1,10 @@
+"""
+This script is organized like so:
++ `if __name__ == "__main__" sets up the Streamlit UI elements
++ `generate_image` houses interactions between UI and the CLIP image 
+generation models
++ Core model code is abstracted in `logic.py` and imported in `generate_image`
+"""
 import streamlit as st
 from pathlib import Path
 import sys
@@ -160,6 +167,7 @@ def generate_image(
             writer.append_data(frame)
         writer.close()
 
+        # TODO: Make the following DRY
         # Save to output folder if run completed
         runoutputdir = outputdir / (
             run_start_dt.strftime("%Y%m%dT%H%M%S") + "-" + run_id
