@@ -1,6 +1,6 @@
 # VQGAN-CLIP web app
 
-Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app)
+Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app). CLIP guided diffusion is WIP on a separate branch, refer to [its README](https://github.com/tnwei/vqgan-clip-app/blob/guided-diffusion/diffusion_README.md) for instructions.
 
 ## Brief intro
 
