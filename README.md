@@ -56,13 +56,15 @@ The gallery viewer reads from `output/` and visualizes previous runs together wi
 
 <!-- move to ARCHITECTURE.md? -->
 
-There is a lot of room for experimentation on this technique. App-related logic is in `app.py`, while most of the underlying logic is stowed away in `utils.py`. Refer to [Streamlit docs](https://docs.streamlit.io/en/stable/index.html) for further info about the web app itself. 
-
-To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` weights in `assets/`, and ensure that they have the same filename, just with different postfixes. It will then appear in the app interface for use. Refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers) for training VQGAN on your own dataset.
+There is a lot of room for experimentation on CLIP-based image generation, thus care has been taken to make the codebase hackable. `app.py` houses the UI, built with Streamlit ([docs](https://docs.streamlit.io/en/stable/index.html)), while the underlying logic is stowed away in `logic.py`, which in turn depends on `vqgan_utils.py`. 
 
 Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
 
-`gallery.py` uses Flask and Jinja templating to serve a simple Bootstrap dashboard.
+To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` weights in `assets/`, and ensure that they have the same filename, just with different postfixes. It will then appear in the app interface for use. Refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers) for training VQGAN on your own dataset.
+
+To modify the image generation logic, instantiate your own model class in `logic.py` and modify `app.py` accordingly if the inputs / outputs are modified.
+
+`gallery.py` uses Flask and Jinja templating to serve a simple Bootstrap dashboard. It is separate from the code for image generation, and only depends on functions declared in `gallery_utils.py`.
 
 ## Modifications introduced
 
