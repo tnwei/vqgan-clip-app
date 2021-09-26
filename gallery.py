@@ -1,5 +1,5 @@
 from flask import Flask, render_template, send_from_directory
-from gallery_utils import ModelRun
+from gallery_utils import RunResults
 from pathlib import Path
 import argparse
 
@@ -12,7 +12,7 @@ def update_runs(fdir):
         # If is a folder and contains images and metadata
         if i.is_dir() and (i / "details.json").exists() and (i / "output.PNG").exists():
             try:
-                runs.append(ModelRun(i))
+                runs.append(RunResults(i))
             except Exception as e:
                 print(f"Skipped {i} due to raised exception {e}")
                 pass

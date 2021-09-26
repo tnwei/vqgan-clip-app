@@ -5,7 +5,7 @@ from PIL import Image
 import yaml
 
 
-class ModelRun:
+class RunResults:
     def __init__(self, fdir: Union[str, Path]):
         fdir = Path(fdir)
         self.fdir = fdir  # exactly as given
