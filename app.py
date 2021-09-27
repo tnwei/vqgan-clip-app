@@ -266,9 +266,16 @@ if __name__ == "__main__":
 
         seed_widget = st.sidebar.empty()
         if set_seed is True:
-            seed = seed_widget.number_input(
-                "Seed", value=defaults["seed"], help="Random seed to use"
+            # Use text_input as number_input relies on JS
+            # which can't natively handle large numbers
+            # torch.seed() generates int w/ 19 or 20 chars!
+            seed_str = seed_widget.text_input(
+                "Seed", value=str(defaults["seed"]), help="Random seed to use"
             )
+            try:
+                seed = int(seed_str)
+            except ValueError as e:
+                st.error("seed input needs to be int")
         else:
             seed = None
 
