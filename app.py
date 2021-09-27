@@ -56,7 +56,7 @@ def generate_image(
             prev_model=st.session_state["model"],
             prev_perceptor=st.session_state["perceptor"],
         )
-        prev_run_id = st.session_state["run_id"].copy()
+        prev_run_id = st.session_state["run_id"]
 
     else:
         # Remove the cache first! CUDA out of memory
@@ -80,7 +80,12 @@ def generate_image(
     run_start_dt = datetime.datetime.now()
 
     ### Model init -------------------------------------------------------------
-    run.model_init()
+    if continue_prev_run is True:
+        run.model_init(init_image=st.session_state["prev_im"])
+    elif init_image is not None:
+        run.model_init(init_image=init_image)
+    else:
+        run.model_init()
 
     ### Iterate ----------------------------------------------------------------
     step_counter = 0
@@ -145,7 +150,7 @@ def generate_image(
                     "init_image": False if init_image is None else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
-                    "seed": seed,
+                    "seed": run.seed,
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
@@ -187,7 +192,7 @@ def generate_image(
                     "init_image": False if init_image is None else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
-                    "seed": seed,
+                    "seed": run.seed,
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
