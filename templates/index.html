@@ -23,13 +23,25 @@
         <span class="text-decoration-underline">Output folder</span>: <span class="fst-italic">{{ fdir }}</span>
         <br>
         <span class="text-decoration-underline">Total runs</span>: {{ runs|length }}
+        <br>
+        {% for pagenum, indices in page_labels.items() %}
+        &nbsp;
+        <a href="{{ url_for('home', page=pagenum) }}">
+          {% if pagenum == page %}
+          <span class="fw-bold">{{indices['start']}}-{{indices['end']}}</span>
+          {% else %}
+          {{indices['start']}}-{{indices['end']}}
+          {% endif %}
+        </a>
+        &nbsp;
+        {% endfor %}
       </small>
     </div>
 
     <br>
     <div class="row row-cols-1 row-cols-md-3 g-4">
 
-      {% for run in runs %}
+      {% for run in runs[startidx-1:endidx] %}
       <div class="col">
         <div class="card h-100">
           <a href="{{ url_for('static', filename=run.impath) }}"><img class="card-img-top"

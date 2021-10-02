@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request
 from gallery_utils import RunResults
 from pathlib import Path
 import argparse
@@ -29,6 +29,12 @@ if __name__ == "__main__":
         default="./output/",
     )
     parser.add_argument(
+        "-n",
+        "--numitems",
+        help="Number of items per page",
+        default=24,  # multiple of three since the dashboard has three panels
+    )
+    parser.add_argument(
         "--kiosk",
         help="Omit showing run details on dashboard",
         default=False,
@@ -49,8 +55,36 @@ if __name__ == "__main__":
 
     @app.route("/")
     def home():
+        # startidx = request.args.get('startidx')
+        # endidx = request.args.get('endidx')
+
+        # Pagenum starts at 1
+        page = request.args.get("page")
+        page = 1 if page is None else int(page)
+
+        # startidx = 1 if startidx is None else int(startidx)
+        # endidx = args.numitems if endidx is None else int(endidx)
+        # print("startidx, endidx: ", startidx, endidx)
+
         runs = update_runs(fdir)  # Updates new results when refreshed
-        return render_template("index.html", runs=runs, fdir=fdir, kiosk=args.kiosk)
+        num_pages = (len(runs) // args.numitems) + 1
+
+        page_labels = {}
+        for i in range(0, num_pages):
+            page_labels[i + 1] = dict(
+                start=i * args.numitems + 1, end=(i + 1) * args.numitems
+            )
+
+        return render_template(
+            "index.html",
+            runs=runs,
+            startidx=page_labels[page]["start"],
+            endidx=page_labels[page]["end"],
+            page=page,
+            fdir=fdir,
+            page_labels=page_labels,
+            kiosk=args.kiosk,
+        )
 
     @app.route("/findurl")
     def findurl(path, filename):
