@@ -15,7 +15,6 @@ def update_runs(fdir):
                 runs.append(RunResults(i))
             except Exception as e:
                 print(f"Skipped {i} due to raised exception {e}")
-                pass
     return runs
 
 
@@ -90,4 +89,4 @@ if __name__ == "__main__":
     def findurl(path, filename):
         return send_from_directory(path, filename)
 
-    app.run(debug=True)
+    app.run(debug=False)
