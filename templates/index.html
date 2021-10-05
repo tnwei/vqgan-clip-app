@@ -76,6 +76,21 @@
     <br>
     <!-- Page footer -->
     <div class="row">
+      <small class="text-muted text-center">
+        {% for pagenum, indices in page_labels.items() %}
+        &nbsp;
+        <a href="{{ url_for('home', page=pagenum) }}">
+          {% if pagenum == page %}
+          <span class="fw-bold">{{indices['start']}}-{{indices['end']}}</span>
+          {% else %}
+          {{indices['start']}}-{{indices['end']}}
+          {% endif %}
+        </a>
+        &nbsp;
+        {% endfor %}
+      </small>
+    </div>
+    <div class="row">
       <small class="text-muted text-end">
         Code: <a href="https://github.com/tnwei/vqgan-clip-app">tnwei/vqgan-clip-app</a>
       </small>
