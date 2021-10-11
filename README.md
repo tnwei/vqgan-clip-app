@@ -1,5 +1,8 @@
 # VQGAN-CLIP web app
 
+![LGTM Grade](https://img.shields.io/lgtm/grade/python/github/tnwei/vqgan-clip-app)
+![License](https://img.shields.io/github/license/tnwei/vqgan-clip-app)
+
 Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app). CLIP guided diffusion is WIP on a separate branch, refer to [its README](https://github.com/tnwei/vqgan-clip-app/blob/guided-diffusion/diffusion_README.md) for instructions.
 
 ## Brief intro
