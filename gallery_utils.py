@@ -33,6 +33,15 @@ class RunResults:
             self.animpath = None
             print(f"fdir passed contains no anim.mp4: {fdir}")
 
+        if "init-image.JPEG" in files_available:
+            self.initimpath = fdir / "init-image.JPEG"
+        else:
+            self.initimpath = None
+
+        self.impromptspath = list(fdir.glob("image-prompt*"))
+        if len(self.impromptspath) == 0:
+            self.impromptspath = None
+
         if "details.txt" in files_available:
             self.detailspath = fdir / "details.txt"
         elif "details.json" in files_available:

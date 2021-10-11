@@ -62,9 +62,22 @@
               </small>
             </p>
 
-            {% if run.animpath is not none %}
-            <p class="card-text"><a href="{{ url_for('static', filename=run.animpath) }}">Link to animation</a></p>
-            {% endif %}
+            <p class="card-text">
+              {% if run.animpath is not none %}
+              <a href="{{ url_for('static', filename=run.animpath) }}">Animation</a>
+              &nbsp;
+              {% endif %}
+              {% if run.initimpath is not none %}
+              <a href="{{ url_for('static', filename=run.initimpath) }}">Init image</a>
+              &nbsp;
+              {% endif %}
+              {% if run.impromptspath is not none %}
+              {% for i in range(run.impromptspath|length) %}
+                <a href="{{ url_for('static', filename=run.impromptspath[i]) }}">Image prompt {{i+1}}</a>
+                &nbsp;
+              {% endfor %}
+              {% endif %}
+            </p>
 
             {% endif %}
 

@@ -137,9 +137,23 @@ def generate_image(
         )
         runoutputdir.mkdir()
 
+        # Save final image
         im.save(runoutputdir / "output.PNG", format="PNG")
+
+        # Save init image
+        if init_image is not None:
+            init_image.save(runoutputdir / "init-image.JPEG", format="JPEG")
+
+        # Save image prompts
+        for count, image_prompt in enumerate(image_prompts):
+            image_prompt.save(
+                runoutputdir / f"image-prompt-{count}.JPEG", format="JPEG"
+            )
+
+        # Save animation
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        # Save metadata
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
@@ -148,6 +162,7 @@ def generate_image(
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
+                    "image_prompts": False if len(image_prompts) == 0 else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
                     "seed": run.seed,
@@ -179,9 +194,23 @@ def generate_image(
         )
         runoutputdir.mkdir()
 
+        # Save final image
         im.save(runoutputdir / "output.PNG", format="PNG")
+
+        # Save init image
+        if init_image is not None:
+            init_image.save(runoutputdir / "init-image.JPEG", format="JPEG")
+
+        # Save image prompts
+        for count, image_prompt in enumerate(image_prompts):
+            image_prompt.save(
+                runoutputdir / f"image-prompt-{count}.JPEG", format="JPEG"
+            )
+
+        # Save animation
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        # Save metadata
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
@@ -190,6 +219,7 @@ def generate_image(
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
+                    "image_prompts": False if len(image_prompts) == 0 else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
                     "seed": run.seed,
