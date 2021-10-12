@@ -40,10 +40,12 @@ class MSEVQGANCLIPRun(VQGANCLIPRun):
         noise_fac: float = 0.1,
         use_noise: Optional[float] = None,
         mse_withzeros=True,
-        mse_decay_rate=50,
-        mse_epoches=5,
+        # mse_decay_rate=50,
+        # mse_epoches=5,
         # Added options
         mse_weight=0.5,
+        mse_weight_decay=0.1,
+        mse_weight_decay_steps=50,
     ) -> None:
         super().__init__()
         self.text_input = text_input
@@ -91,14 +93,11 @@ class MSEVQGANCLIPRun(VQGANCLIPRun):
         self.noise_fac = noise_fac
         self.use_noise = use_noise
         self.mse_withzeros = mse_withzeros
-        self.mse_decay_rate = mse_decay_rate
-        self.mse_epoches = mse_epoches
-
-        # Added init for MSE VQGAN
-        if self.args.init_weight:
-            self.mse_decay = self.args.init_weight / self.mse_epoches
+        self.mse_weight_decay = mse_weight_decay
+        self.mse_weight_decay_steps = mse_weight_decay_steps
 
         self.mse_weight = self.args.init_weight
+        self.init_mse_weight = self.mse_weight
 
         self.augs = nn.Sequential(
             K.RandomHorizontalFlip(p=0.5),
@@ -241,24 +240,30 @@ class MSEVQGANCLIPRun(VQGANCLIPRun):
 
         if self.args.init_weight:
             result.append(F.mse_loss(self.z, self.z_orig) * self.mse_weight / 2)
-            # result.append(F.mse_loss(z, z_orig) * ((1/torch.tensor((i)*2 + 1))*mse_weight) / 2)
 
             with torch.no_grad():
+                # if not the first step
+                # and is time for step change
+                # and both weight decay steps and magnitude are nonzero
+                # and MSE isn't zero already
                 if (
                     self.iterate_counter > 0
-                    and self.iterate_counter % self.mse_decay_rate == 0
-                    and self.iterate_counter <= self.mse_decay_rate * self.mse_epoches
+                    and self.iterate_counter % self.mse_weight_decay_steps == 0
+                    and self.mse_weight_decay != 0
+                    and self.mse_weight_decay_steps != 0
+                    and self.mse_weight != 0
                 ):
+                    self.mse_weight = self.mse_weight - self.mse_weight_decay
 
-                    if (
-                        self.mse_weight - self.mse_decay > 0
-                        and self.mse_weight - self.mse_decay >= self.mse_decay
-                    ):
-                        self.mse_weight = self.mse_weight - self.mse_decay
-                        print(f"updated mse weight: {self.mse_weight}")
+                    # Don't allow changing sign
+                    # Basically, caps MSE at zero if decreasing from positive
+                    # But, also prevents MSE from becoming positive if -MSE intended
+                    if self.init_mse_weight > 0:
+                        self.mse_weight = max(self.mse_weight, 0)
                     else:
-                        self.mse_weight = 0
-                        print(f"updated mse weight: {self.mse_weight}")
+                        self.mse_weight = min(self.mse_weight, 0)
+
+                    print(f"updated mse weight: {self.mse_weight}")
 
         for prompt in self.pMs:
             result.append(prompt(iii))

@@ -35,6 +35,8 @@ def generate_image(
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
     mse_weight: float = 0,
+    mse_weight_decay: float = 0,
+    mse_weight_decay_steps: int = 0,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -52,9 +54,9 @@ def generate_image(
         noise_fac=0.1,
         use_noise=None,
         mse_withzeros=True,
-        mse_decay_rate=50,
-        mse_epoches=5,
         mse_weight=mse_weight,
+        mse_weight_decay=mse_weight_decay,
+        mse_weight_decay_steps=mse_weight_decay_steps,
     )
 
     ### Load model -------------------------------------------------------------
@@ -367,9 +369,23 @@ if __name__ == "__main__":
         mse_weight = st.sidebar.number_input(
             "MSE weight",
             value=defaults["mse_weight"],
-            min_value=0.0,
+            # min_value=0.0, # leave this out to allow creativity
             step=0.05,
             help="Set weights for MSE regularization",
+        )
+        mse_weight_decay = st.sidebar.number_input(
+            "Decay MSE weight by ...",
+            value=0.0,
+            # min_value=0.0, # leave this out to allow creativity
+            step=0.05,
+            help="Subtracts MSE weight by this amount at every step change. MSE weight change stops at zero",
+        )
+        mse_weight_decay_steps = st.sidebar.number_input(
+            "... every N steps",
+            value=0,
+            min_value=0,
+            step=1,
+            help="Number of steps to subtract MSE weight. Leave zero for no weight decay",
         )
         submitted = st.form_submit_button("Run!")
         # End of form
@@ -424,6 +440,8 @@ if __name__ == "__main__":
             image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
             mse_weight=mse_weight,
+            mse_weight_decay=mse_weight_decay,
+            mse_weight_decay_steps=mse_weight_decay_steps,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
