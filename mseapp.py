@@ -34,6 +34,7 @@ def generate_image(
     image_prompts: List[Image.Image] = [],
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
+    mse_weight: float = 0,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -53,6 +54,7 @@ def generate_image(
         mse_withzeros=True,
         mse_decay_rate=50,
         mse_epoches=5,
+        mse_weight=mse_weight,
     )
 
     ### Load model -------------------------------------------------------------
@@ -362,6 +364,13 @@ if __name__ == "__main__":
             value=defaults["continue_prev_run"],
             help="Use existing image and existing weights for the next run. If yes, ignores 'Use starting image'",
         )
+        mse_weight = st.sidebar.number_input(
+            "MSE weight",
+            value=defaults["mse_weight"],
+            min_value=0.0,
+            step=0.05,
+            help="Set weights for MSE regularization",
+        )
         submitted = st.form_submit_button("Run!")
         # End of form
 
@@ -414,6 +423,7 @@ if __name__ == "__main__":
             init_image=init_image,
             image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
+            mse_weight=mse_weight,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
