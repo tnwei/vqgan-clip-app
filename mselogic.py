@@ -2,22 +2,13 @@ from typing import Optional, List, Tuple
 from PIL import Image
 import argparse
 import clip
-from vqgan_utils import (
-    load_vqgan_model,
-    MakeCutouts,
-    parse_prompt,
-    resize_image,
-    Prompt,
-    synth,
-    checkin,
-)
+from vqgan_utils import MakeCutouts, parse_prompt, resize_image, Prompt, synth, checkin
 import torch
 from torchvision.transforms import functional as TF
 import torch.nn as nn
 from torch.nn import functional as F
 from torch import optim
 from torchvision import transforms
-from mse_vqgan_utils import synth_mse, MSEMakeCutouts, noise_gen
 import kornia.augmentation as K
 from logic import VQGANCLIPRun
 
@@ -131,11 +122,8 @@ class MSEVQGANCLIPRun(VQGANCLIPRun):
             ]
 
         f = 2 ** (self.model.decoder.num_resolutions - 1)
-        self.make_cutouts = MSEMakeCutouts(
-            cut_size,
-            self.args.cutn,
-            cut_pow=self.args.cut_pow,
-            augs=self.augs if self.use_augs is True else None,
+        self.make_cutouts = MakeCutouts(
+            cut_size, self.args.cutn, cut_pow=self.args.cut_pow
         )
         n_toks = self.model.quantize.n_e
         toksX, toksY = self.args.size[0] // f, self.args.size[1] // f
@@ -224,14 +212,7 @@ class MSEVQGANCLIPRun(VQGANCLIPRun):
             self.pMs.append(Prompt(embed, weight).to(self.device))
 
     def _ascend_txt(self) -> List:
-        out = synth_mse(
-            self.model,
-            self.z,
-            quantize=True,
-            is_openimages_f16_8192=True
-            if self.args.vqgan_checkpoint == "vqgan_openimages_f16_8192.ckpt"
-            else False,
-        )
+        out = synth(self.model, self.z)
 
         cutouts = self.make_cutouts(out)
         iii = self.perceptor.encode_image(self.normalize(cutouts)).float()
