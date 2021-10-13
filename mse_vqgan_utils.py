@@ -1,16 +1,9 @@
-import math
 import torch
 from torch import nn
 import torch.nn.functional as F
-import io
-from omegaconf import OmegaConf
-from taming.models import cond_transformer, vqgan
-from PIL import Image
-from torchvision.transforms import functional as TF
 import sys
-import kornia.augmentation as K
 
-from vqgan_utils import resample, clamp_with_grad, replace_grad, vector_quantize
+from vqgan_utils import resample, clamp_with_grad, vector_quantize
 
 sys.path.append("./taming-transformers")
 
@@ -25,15 +18,6 @@ def noise_gen(shape):
         )
         noise += torch.randn([n, c, h_cur, w_cur]) / 5
     return noise
-
-
-def one_sided_clip_loss(input, target, labels=None, logit_scale=100):
-    input_normed = F.normalize(input, dim=-1)
-    target_normed = F.normalize(target, dim=-1)
-    logits = input_normed @ target_normed.T * logit_scale
-    if labels is None:
-        labels = torch.arange(len(input), device=logits.device)
-    return F.cross_entropy(logits, labels)
 
 
 class MSEMakeCutouts(nn.Module):
@@ -57,9 +41,9 @@ class MSEMakeCutouts(nn.Module):
         min_size = min(sideX, sideY, self.cut_size)
         cutouts = []
 
-        min_size_width = min(sideX, sideY)
+        # min_size_width = min(sideX, sideY)
 
-        for ii in range(self.cutn):
+        for _ in range(self.cutn):
 
             size = int(
                 torch.rand([]) ** self.cut_pow * (max_size - min_size) + min_size
@@ -91,64 +75,6 @@ class TVLoss(nn.Module):
         y_diff = input[..., 1:, :-1] - input[..., :-1, :-1]
         diff = x_diff ** 2 + y_diff ** 2 + 1e-8
         return diff.mean(dim=1).sqrt().mean()
-
-
-class GaussianBlur2d(nn.Module):
-    def __init__(self, sigma, window=0, mode="reflect", value=0):
-        super().__init__()
-        self.mode = mode
-        self.value = value
-        if not window:
-            window = max(math.ceil((sigma * 6 + 1) / 2) * 2 - 1, 3)
-        if sigma:
-            kernel = torch.exp(
-                -((torch.arange(window) - window // 2) ** 2) / 2 / sigma ** 2
-            )
-            kernel /= kernel.sum()
-        else:
-            kernel = torch.ones([1])
-        self.register_buffer("kernel", kernel)
-
-    def forward(self, input):
-        n, c, h, w = input.shape
-        input = input.view([n * c, 1, h, w])
-        start_pad = (self.kernel.shape[0] - 1) // 2
-        end_pad = self.kernel.shape[0] // 2
-        input = F.pad(
-            input, (start_pad, end_pad, start_pad, end_pad), self.mode, self.value
-        )
-        input = F.conv2d(input, self.kernel[None, None, None, :])
-        input = F.conv2d(input, self.kernel[None, None, :, None])
-        return input.view([n, c, h, w])
-
-
-class EMATensor(nn.Module):
-    """implmeneted by Katherine Crowson"""
-
-    def __init__(self, tensor, decay):
-        super().__init__()
-        self.tensor = nn.Parameter(tensor)
-        self.register_buffer("biased", torch.zeros_like(tensor))
-        self.register_buffer("average", torch.zeros_like(tensor))
-        self.decay = decay
-        self.register_buffer("accum", torch.tensor(1.0))
-        self.update()
-
-    @torch.no_grad()
-    def update(self):
-        if not self.training:
-            raise RuntimeError("update() should only be called during training")
-
-        self.accum *= self.decay
-        self.biased.mul_(self.decay)
-        self.biased.add_((1 - self.decay) * self.tensor)
-        self.average.copy_(self.biased)
-        self.average.div_(1 - self.accum)
-
-    def forward(self):
-        if self.training:
-            return self.tensor
-        return self.average
 
 
 def synth_mse(model, z, is_openimages_f16_8192: bool = False, quantize: bool = True):
