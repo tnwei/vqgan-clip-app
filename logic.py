@@ -66,6 +66,13 @@ class VQGANCLIPRun(Run):
         image_prompts: List[Image.Image] = [],
         continue_prev_run: bool = False,
         seed: Optional[int] = None,
+        mse_weight=0.5,
+        mse_weight_decay=0.1,
+        mse_weight_decay_steps=50,
+        # use_augs: bool = True,
+        # noise_fac: float = 0.1,
+        # use_noise: Optional[float] = None,
+        # mse_withzeros=True,
         ## **kwargs,  # Use this to receive Streamlit objects ## Call from main UI
     ) -> None:
         super().__init__()
@@ -93,7 +100,7 @@ class VQGANCLIPRun(Run):
             noise_prompt_weights=[],
             size=[int(image_x), int(image_y)],
             init_image=init_image,
-            init_weight=0.0,
+            init_weight=mse_weight,
             # clip.available_models()
             # ['RN50', 'RN101', 'RN50x4', 'ViT-B/32']
             # Visual Transformer seems to be the smallest
@@ -110,6 +117,16 @@ class VQGANCLIPRun(Run):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.device = device
         print("Using device:", device)
+
+        self.iterate_counter = 0
+        # self.use_augs = use_augs
+        # self.noise_fac = noise_fac
+        # self.use_noise = use_noise
+        # self.mse_withzeros = mse_withzeros
+        self.init_mse_weight = mse_weight
+        self.mse_weight = mse_weight
+        self.mse_weight_decay = mse_weight_decay
+        self.mse_weight_decay_steps = mse_weight_decay_steps
 
     def load_model(
         self, prev_model: nn.Module = None, prev_perceptor: nn.Module = None
@@ -217,7 +234,32 @@ class VQGANCLIPRun(Run):
         result = []
 
         if self.args.init_weight:
-            result.append(F.mse_loss(self.z, self.z_orig) * self.args.init_weight / 2)
+            result.append(F.mse_loss(self.z, self.z_orig) * self.init_mse_weight / 2)
+
+            # MSE regularization scheduler
+            with torch.no_grad():
+                # if not the first step
+                # and is time for step change
+                # and both weight decay steps and magnitude are nonzero
+                # and MSE isn't zero already
+                if (
+                    self.iterate_counter > 0
+                    and self.iterate_counter % self.mse_weight_decay_steps == 0
+                    and self.mse_weight_decay != 0
+                    and self.mse_weight_decay_steps != 0
+                    and self.mse_weight != 0
+                ):
+                    self.mse_weight = self.mse_weight - self.mse_weight_decay
+
+                    # Don't allow changing sign
+                    # Basically, caps MSE at zero if decreasing from positive
+                    # But, also prevents MSE from becoming positive if -MSE intended
+                    if self.init_mse_weight > 0:
+                        self.mse_weight = max(self.mse_weight, 0)
+                    else:
+                        self.mse_weight = min(self.mse_weight, 0)
+
+                    print(f"updated mse weight: {self.mse_weight}")
 
         for prompt in self.pMs:
             result.append(prompt(iii))
@@ -238,6 +280,9 @@ class VQGANCLIPRun(Run):
         self.opt.step()
         with torch.no_grad():
             self.z.copy_(self.z.maximum(self.z_min).minimum(self.z_max))
+
+        # Advance iteration counter
+        self.iterate_counter += 1
 
         # Output stuff useful for humans
         return [loss.item() for loss in losses], im

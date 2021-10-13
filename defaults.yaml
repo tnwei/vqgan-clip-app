@@ -7,3 +7,5 @@ seed: 0
 use_starting_image: false
 use_image_prompts: false
 continue_prev_run: false
+mse_weight: 0.0
+use_mse_regularization: false
