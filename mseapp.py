@@ -181,6 +181,9 @@ def generate_image(
                     "vqgan_ckpt": vqgan_ckpt,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+                    "mse_weight": mse_weight,
+                    "mse_weight_decay": mse_weight_decay,
+                    "mse_weight_decay_steps": mse_weight_decay_steps,
                 },
                 f,
                 indent=4,
@@ -238,6 +241,9 @@ def generate_image(
                     "vqgan_ckpt": vqgan_ckpt,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+                    "mse_weight": mse_weight,
+                    "mse_weight_decay": mse_weight_decay,
+                    "mse_weight_decay_steps": mse_weight_decay_steps,
                 },
                 f,
                 indent=4,
@@ -366,27 +372,38 @@ if __name__ == "__main__":
             value=defaults["continue_prev_run"],
             help="Use existing image and existing weights for the next run. If yes, ignores 'Use starting image'",
         )
-        mse_weight = st.sidebar.number_input(
-            "MSE weight",
-            value=defaults["mse_weight"],
-            # min_value=0.0, # leave this out to allow creativity
-            step=0.05,
-            help="Set weights for MSE regularization",
+
+        use_mse_reg = st.sidebar.checkbox(
+            "Use MSE regularization",
+            value=defaults["use_mse_regularization"],
+            help="Check to add MSE regularization",
         )
-        mse_weight_decay = st.sidebar.number_input(
-            "Decay MSE weight by ...",
-            value=0.0,
-            # min_value=0.0, # leave this out to allow creativity
-            step=0.05,
-            help="Subtracts MSE weight by this amount at every step change. MSE weight change stops at zero",
-        )
-        mse_weight_decay_steps = st.sidebar.number_input(
-            "... every N steps",
-            value=0,
-            min_value=0,
-            step=1,
-            help="Number of steps to subtract MSE weight. Leave zero for no weight decay",
-        )
+        mse_weight_widget = st.sidebar.empty()
+        mse_weight_decay_widget = st.sidebar.empty()
+        mse_weight_decay_steps = st.sidebar.empty()
+
+        if use_mse_reg is True:
+            mse_weight = mse_weight_widget.number_input(
+                "MSE weight",
+                value=defaults["mse_weight"],
+                # min_value=0.0, # leave this out to allow creativity
+                step=0.05,
+                help="Set weights for MSE regularization",
+            )
+            mse_weight_decay = mse_weight_decay_widget.number_input(
+                "Decay MSE weight by ...",
+                value=0.0,
+                # min_value=0.0, # leave this out to allow creativity
+                step=0.05,
+                help="Subtracts MSE weight by this amount at every step change. MSE weight change stops at zero",
+            )
+            mse_weight_decay_steps = mse_weight_decay_steps.number_input(
+                "... every N steps",
+                value=0,
+                min_value=0,
+                step=1,
+                help="Number of steps to subtract MSE weight. Leave zero for no weight decay",
+            )
         submitted = st.form_submit_button("Run!")
         # End of form
 
