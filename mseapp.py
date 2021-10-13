@@ -21,7 +21,7 @@ from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
 import numpy as np
-from logic import MSEVQGANCLIPRun
+from logic import VQGANCLIPRun
 
 
 def generate_image(
@@ -40,7 +40,7 @@ def generate_image(
 ) -> None:
 
     ### Init -------------------------------------------------------------------
-    run = MSEVQGANCLIPRun(
+    run = VQGANCLIPRun(
         text_input=text_input,
         vqgan_ckpt=vqgan_ckpt,
         num_steps=num_steps,
@@ -50,10 +50,6 @@ def generate_image(
         init_image=init_image,
         image_prompts=image_prompts,
         continue_prev_run=continue_prev_run,
-        use_augs=True,
-        noise_fac=0.1,
-        use_noise=None,
-        mse_withzeros=True,
         mse_weight=mse_weight,
         mse_weight_decay=mse_weight_decay,
         mse_weight_decay_steps=mse_weight_decay_steps,
