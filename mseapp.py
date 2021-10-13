@@ -21,7 +21,7 @@ from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
 import numpy as np
-from mselogic import MSEVQGANCLIPRun
+from logic import MSEVQGANCLIPRun
 
 
 def generate_image(
