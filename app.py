@@ -37,6 +37,7 @@ def generate_image(
     mse_weight: float = 0,
     mse_weight_decay: float = 0,
     mse_weight_decay_steps: int = 0,
+    tv_loss_weight: float = 1e-3,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -53,6 +54,7 @@ def generate_image(
         mse_weight=mse_weight,
         mse_weight_decay=mse_weight_decay,
         mse_weight_decay_steps=mse_weight_decay_steps,
+        tv_loss_weight=tv_loss_weight,
     )
 
     ### Load model -------------------------------------------------------------
@@ -404,6 +406,22 @@ if __name__ == "__main__":
             mse_weight = 0
             mse_weight_decay = 0
             mse_weight_decay_steps = 0
+
+        use_tv_loss = st.sidebar.checkbox(
+            "Use TV loss regularization",
+            value=defaults["use_tv_loss_regularization"],
+            help="Check to add MSE regularization",
+        )
+        tv_loss_weight_widget = st.sidebar.empty()
+        if use_tv_loss is True:
+            tv_loss_weight = tv_loss_weight_widget.number_input(
+                "TV loss weight",
+                value=defaults["tv_loss_weight"],
+                min_value=0.0,
+                step=1e-4,
+                help="Set weights for TV loss regularization, which encourages spatial smoothness. Ref: https://github.com/jcjohnson/neural-style/issues/302",
+                format="%.1e",
+            )
 
         submitted = st.form_submit_button("Run!")
         # End of form

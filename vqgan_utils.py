@@ -204,3 +204,12 @@ def checkin(model, z):
     im = TF.to_pil_image(out[0].cpu())
     return im
     # display.display(display.Image('progress.png')) # ipynb only
+
+
+class TVLoss(nn.Module):
+    def forward(self, input):
+        input = F.pad(input, (0, 1, 0, 1), "replicate")
+        x_diff = input[..., :-1, 1:] - input[..., :-1, :-1]
+        y_diff = input[..., 1:, :-1] - input[..., :-1, :-1]
+        diff = x_diff ** 2 + y_diff ** 2 + 1e-8
+        return diff.mean(dim=1).sqrt().mean()
