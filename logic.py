@@ -10,6 +10,7 @@ from vqgan_utils import (
     Prompt,
     synth,
     checkin,
+    TVLoss,
 )
 import torch
 from torchvision.transforms import functional as TF
@@ -231,10 +232,12 @@ class VQGANCLIPRun(Run):
             self.normalize(self.make_cutouts(out))
         ).float()
 
-        result = []
+        result = {}
 
         if self.args.init_weight:
-            result.append(F.mse_loss(self.z, self.z_orig) * self.init_mse_weight / 2)
+            result["mse_loss"] = (
+                F.mse_loss(self.z, self.z_orig) * self.init_mse_weight / 2
+            )
 
             # MSE regularization scheduler
             with torch.no_grad():
@@ -261,8 +264,11 @@ class VQGANCLIPRun(Run):
 
                     print(f"updated mse weight: {self.mse_weight}")
 
-        for prompt in self.pMs:
-            result.append(prompt(iii))
+        tv_loss_fn = TVLoss()
+        result["tv_loss"] = tv_loss_fn(self.z) * 1e-3
+
+        for count, prompt in enumerate(self.pMs):
+            result[f"prompt_loss_{count}"] = prompt(iii)
 
         return result
 
@@ -275,7 +281,7 @@ class VQGANCLIPRun(Run):
         im: Image.Image = checkin(self.model, self.z)
 
         # Backprop
-        loss = sum(losses)
+        loss = sum([j for i, j in losses.items()])
         loss.backward()
         self.opt.step()
         with torch.no_grad():
@@ -284,5 +290,9 @@ class VQGANCLIPRun(Run):
         # Advance iteration counter
         self.iterate_counter += 1
 
+        print(
+            f"Step {self.iterate_counter} losses: {[(i, j.item()) for i, j in losses.items()]}"
+        )
+
         # Output stuff useful for humans
-        return [loss.item() for loss in losses], im
+        return [(i, j.item()) for i, j in losses.items()], im
