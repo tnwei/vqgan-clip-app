@@ -70,6 +70,7 @@ class VQGANCLIPRun(Run):
         mse_weight=0.5,
         mse_weight_decay=0.1,
         mse_weight_decay_steps=50,
+        tv_loss_weight=1e-3
         # use_augs: bool = True,
         # noise_fac: float = 0.1,
         # use_noise: Optional[float] = None,
@@ -128,6 +129,9 @@ class VQGANCLIPRun(Run):
         self.mse_weight = mse_weight
         self.mse_weight_decay = mse_weight_decay
         self.mse_weight_decay_steps = mse_weight_decay_steps
+
+        # For TV loss
+        self.tv_loss_weight = tv_loss_weight
 
     def load_model(
         self, prev_model: nn.Module = None, prev_perceptor: nn.Module = None
@@ -265,7 +269,7 @@ class VQGANCLIPRun(Run):
                     print(f"updated mse weight: {self.mse_weight}")
 
         tv_loss_fn = TVLoss()
-        result["tv_loss"] = tv_loss_fn(self.z) * 1e-3
+        result["tv_loss"] = tv_loss_fn(self.z) * self.tv_loss_weight
 
         for count, prompt in enumerate(self.pMs):
             result[f"prompt_loss_{count}"] = prompt(iii)
