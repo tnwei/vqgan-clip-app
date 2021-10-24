@@ -239,9 +239,7 @@ class VQGANCLIPRun(Run):
         result = {}
 
         if self.args.init_weight:
-            result["mse_loss"] = (
-                F.mse_loss(self.z, self.z_orig) * self.init_mse_weight / 2
-            )
+            result["mse_loss"] = F.mse_loss(self.z, self.z_orig) * self.mse_weight / 2
 
             # MSE regularization scheduler
             with torch.no_grad():
