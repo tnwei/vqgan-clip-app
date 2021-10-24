@@ -7,7 +7,9 @@ seed: 0
 use_starting_image: false
 use_image_prompts: false
 continue_prev_run: false
-mse_weight: 0.0
+mse_weight: 0.5
+mse_weight_decay: 0.1
+mse_weight_decay_steps: 50
 use_mse_regularization: false
 use_tv_loss_regularization: true
 tv_loss_weight: 1e-3

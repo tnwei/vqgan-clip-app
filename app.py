@@ -392,14 +392,14 @@ if __name__ == "__main__":
             )
             mse_weight_decay = mse_weight_decay_widget.number_input(
                 "Decay MSE weight by ...",
-                value=0.0,
+                value=defaults["mse_weight_decay"],
                 # min_value=0.0, # leave this out to allow creativity
                 step=0.05,
                 help="Subtracts MSE weight by this amount at every step change. MSE weight change stops at zero",
             )
             mse_weight_decay_steps = mse_weight_decay_steps.number_input(
                 "... every N steps",
-                value=0,
+                value=defaults["mse_weight_decay_steps"],
                 min_value=0,
                 step=1,
                 help="Number of steps to subtract MSE weight. Leave zero for no weight decay",
