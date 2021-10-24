@@ -451,7 +451,11 @@ if __name__ == "__main__":
             # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
             readme_lines = f.readlines()
             readme_buffer = []
-            images = ["docs/ui.jpeg", "docs/four-seasons-20210808.png"]
+            images = [
+                "docs/ui.jpeg",
+                "docs/four-seasons-20210808.png",
+                "docs/gallery.jpg",
+            ]
             for line in readme_lines:
                 readme_buffer.append(line)
                 for image in images:
