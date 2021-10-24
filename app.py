@@ -182,6 +182,7 @@ def generate_image(
                     "mse_weight": mse_weight,
                     "mse_weight_decay": mse_weight_decay,
                     "mse_weight_decay_steps": mse_weight_decay_steps,
+                    "tv_loss_weight": tv_loss_weight,
                 },
                 f,
                 indent=4,
@@ -242,6 +243,7 @@ def generate_image(
                     "mse_weight": mse_weight,
                     "mse_weight_decay": mse_weight_decay,
                     "mse_weight_decay_steps": mse_weight_decay_steps,
+                    "tv_loss_weight": tv_loss_weight,
                 },
                 f,
                 indent=4,
@@ -422,6 +424,8 @@ if __name__ == "__main__":
                 help="Set weights for TV loss regularization, which encourages spatial smoothness. Ref: https://github.com/jcjohnson/neural-style/issues/302",
                 format="%.1e",
             )
+        else:
+            tv_loss_weight = 0
 
         submitted = st.form_submit_button("Run!")
         # End of form
