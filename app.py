@@ -443,7 +443,7 @@ if __name__ == "__main__":
             st.session_state["prev_im"], caption="Output image", output_format="PNG"
         )
 
-    with st.beta_expander("Expand for README"):
+    with st.expander("Expand for README"):
         with open("README.md", "r") as f:
             # description = f.read()
             # Preprocess links to redirect to github
