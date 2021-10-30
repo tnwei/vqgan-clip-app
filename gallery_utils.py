@@ -7,10 +7,9 @@ import yaml
 
 class RunResults:
     def __init__(self, fdir: Union[str, Path]):
-        fdir = Path(fdir)
-        self.fdir = fdir  # exactly as given
-        self.absfdir = fdir.resolve()  # abs
-        files_available = [i.name for i in fdir.glob("*")]
+        self.fdir: str = Path(fdir)  # exactly as given
+        self.absfdir: Path = Path(fdir).resolve()  # abs
+        files_available = [i.name for i in self.fdir.glob("*")]
 
         # The most important info is the final image and the metadata
         # Leaving an option to delete videos to save space
@@ -25,18 +24,27 @@ class RunResults:
         if "output.PNG" not in files_available:
             raise ValueError(f"fdir passed contains no output.PNG: {fdir}")
 
-        self.impath = fdir / "output.PNG"
+        self.impath = (self.fdir / "output.PNG").as_posix()
 
         if "anim.mp4" in files_available:
-            self.animpath = fdir / "anim.mp4"
+            self.animpath = (self.fdir / "anim.mp4").as_posix()
         else:
             self.animpath = None
             print(f"fdir passed contains no anim.mp4: {fdir}")
 
+        if "init-image.JPEG" in files_available:
+            self.initimpath = (self.fdir / "init-image.JPEG").as_posix()
+        else:
+            self.initimpath = None
+
+        self.impromptspath = [i.as_posix() for i in self.fdir.glob("image-prompt*")]
+        if len(self.impromptspath) == 0:
+            self.impromptspath = None
+
         if "details.txt" in files_available:
-            self.detailspath = fdir / "details.txt"
+            self.detailspath = (self.fdir / "details.txt").as_posix()
         elif "details.json" in files_available:
-            self.detailspath = fdir / "details.json"
+            self.detailspath = (self.fdir / "details.json").as_posix()
 
         with open(self.detailspath, "r") as f:
             self.details = json.load(f)
@@ -54,6 +62,6 @@ class RunResults:
         self.detailshtmlstr = self.detailshtmlstr.replace("\n", "<br>")
         # Edit: Using preformatted tag <pre>, solved!
 
-        self.im = Image.open(fdir / "output.PNG").convert(
+        self.im = Image.open(self.fdir / "output.PNG").convert(
             "RGB"
         )  # just to be sure the format is right

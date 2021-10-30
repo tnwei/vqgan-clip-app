@@ -34,6 +34,10 @@ def generate_image(
     image_prompts: List[Image.Image] = [],
     continue_prev_run: bool = False,
     seed: Optional[int] = None,
+    mse_weight: float = 0,
+    mse_weight_decay: float = 0,
+    mse_weight_decay_steps: int = 0,
+    tv_loss_weight: float = 1e-3,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -47,6 +51,10 @@ def generate_image(
         init_image=init_image,
         image_prompts=image_prompts,
         continue_prev_run=continue_prev_run,
+        mse_weight=mse_weight,
+        mse_weight_decay=mse_weight_decay,
+        mse_weight_decay_steps=mse_weight_decay_steps,
+        tv_loss_weight=tv_loss_weight,
     )
 
     ### Load model -------------------------------------------------------------
@@ -56,7 +64,7 @@ def generate_image(
             prev_model=st.session_state["model"],
             prev_perceptor=st.session_state["perceptor"],
         )
-        prev_run_id = st.session_state["run_id"].copy()
+        prev_run_id = st.session_state["run_id"]
 
     else:
         # Remove the cache first! CUDA out of memory
@@ -80,7 +88,12 @@ def generate_image(
     run_start_dt = datetime.datetime.now()
 
     ### Model init -------------------------------------------------------------
-    run.model_init()
+    if continue_prev_run is True:
+        run.model_init(init_image=st.session_state["prev_im"])
+    elif init_image is not None:
+        run.model_init(init_image=init_image)
+    else:
+        run.model_init()
 
     ### Iterate ----------------------------------------------------------------
     step_counter = 0
@@ -132,9 +145,23 @@ def generate_image(
         )
         runoutputdir.mkdir()
 
+        # Save final image
         im.save(runoutputdir / "output.PNG", format="PNG")
+
+        # Save init image
+        if init_image is not None:
+            init_image.save(runoutputdir / "init-image.JPEG", format="JPEG")
+
+        # Save image prompts
+        for count, image_prompt in enumerate(image_prompts):
+            image_prompt.save(
+                runoutputdir / f"image-prompt-{count}.JPEG", format="JPEG"
+            )
+
+        # Save animation
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        # Save metadata
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
@@ -143,14 +170,19 @@ def generate_image(
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
+                    "image_prompts": False if len(image_prompts) == 0 else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
-                    "seed": seed,
+                    "seed": run.seed,
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+                    "mse_weight": mse_weight,
+                    "mse_weight_decay": mse_weight_decay,
+                    "mse_weight_decay_steps": mse_weight_decay_steps,
+                    "tv_loss_weight": tv_loss_weight,
                 },
                 f,
                 indent=4,
@@ -174,9 +206,23 @@ def generate_image(
         )
         runoutputdir.mkdir()
 
+        # Save final image
         im.save(runoutputdir / "output.PNG", format="PNG")
+
+        # Save init image
+        if init_image is not None:
+            init_image.save(runoutputdir / "init-image.JPEG", format="JPEG")
+
+        # Save image prompts
+        for count, image_prompt in enumerate(image_prompts):
+            image_prompt.save(
+                runoutputdir / f"image-prompt-{count}.JPEG", format="JPEG"
+            )
+
+        # Save animation
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        # Save metadata
         with open(runoutputdir / "details.json", "w") as f:
             json.dump(
                 {
@@ -185,14 +231,19 @@ def generate_image(
                     "planned_num_steps": num_steps,
                     "text_input": text_input,
                     "init_image": False if init_image is None else True,
+                    "image_prompts": False if len(image_prompts) == 0 else True,
                     "continue_prev_run": continue_prev_run,
                     "prev_run_id": prev_run_id,
-                    "seed": seed,
+                    "seed": run.seed,
                     "Xdim": image_x,
                     "ydim": image_y,
                     "vqgan_ckpt": vqgan_ckpt,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+                    "mse_weight": mse_weight,
+                    "mse_weight_decay": mse_weight_decay,
+                    "mse_weight_decay_steps": mse_weight_decay_steps,
+                    "tv_loss_weight": tv_loss_weight,
                 },
                 f,
                 indent=4,
@@ -261,9 +312,16 @@ if __name__ == "__main__":
 
         seed_widget = st.sidebar.empty()
         if set_seed is True:
-            seed = seed_widget.number_input(
-                "Seed", value=defaults["seed"], help="Random seed to use"
+            # Use text_input as number_input relies on JS
+            # which can't natively handle large numbers
+            # torch.seed() generates int w/ 19 or 20 chars!
+            seed_str = seed_widget.text_input(
+                "Seed", value=str(defaults["seed"]), help="Random seed to use"
             )
+            try:
+                seed = int(seed_str)
+            except ValueError as e:
+                st.error("seed input needs to be int")
         else:
             seed = None
 
@@ -314,6 +372,61 @@ if __name__ == "__main__":
             value=defaults["continue_prev_run"],
             help="Use existing image and existing weights for the next run. If yes, ignores 'Use starting image'",
         )
+
+        use_mse_reg = st.sidebar.checkbox(
+            "Use MSE regularization",
+            value=defaults["use_mse_regularization"],
+            help="Check to add MSE regularization",
+        )
+        mse_weight_widget = st.sidebar.empty()
+        mse_weight_decay_widget = st.sidebar.empty()
+        mse_weight_decay_steps = st.sidebar.empty()
+
+        if use_mse_reg is True:
+            mse_weight = mse_weight_widget.number_input(
+                "MSE weight",
+                value=defaults["mse_weight"],
+                # min_value=0.0, # leave this out to allow creativity
+                step=0.05,
+                help="Set weights for MSE regularization",
+            )
+            mse_weight_decay = mse_weight_decay_widget.number_input(
+                "Decay MSE weight by ...",
+                value=defaults["mse_weight_decay"],
+                # min_value=0.0, # leave this out to allow creativity
+                step=0.05,
+                help="Subtracts MSE weight by this amount at every step change. MSE weight change stops at zero",
+            )
+            mse_weight_decay_steps = mse_weight_decay_steps.number_input(
+                "... every N steps",
+                value=defaults["mse_weight_decay_steps"],
+                min_value=0,
+                step=1,
+                help="Number of steps to subtract MSE weight. Leave zero for no weight decay",
+            )
+        else:
+            mse_weight = 0
+            mse_weight_decay = 0
+            mse_weight_decay_steps = 0
+
+        use_tv_loss = st.sidebar.checkbox(
+            "Use TV loss regularization",
+            value=defaults["use_tv_loss_regularization"],
+            help="Check to add MSE regularization",
+        )
+        tv_loss_weight_widget = st.sidebar.empty()
+        if use_tv_loss is True:
+            tv_loss_weight = tv_loss_weight_widget.number_input(
+                "TV loss weight",
+                value=defaults["tv_loss_weight"],
+                min_value=0.0,
+                step=1e-4,
+                help="Set weights for TV loss regularization, which encourages spatial smoothness. Ref: https://github.com/jcjohnson/neural-style/issues/302",
+                format="%.1e",
+            )
+        else:
+            tv_loss_weight = 0
+
         submitted = st.form_submit_button("Run!")
         # End of form
 
@@ -330,7 +443,7 @@ if __name__ == "__main__":
             st.session_state["prev_im"], caption="Output image", output_format="PNG"
         )
 
-    with st.beta_expander("Expand for README"):
+    with st.expander("Expand for README"):
         with open("README.md", "r") as f:
             # description = f.read()
             # Preprocess links to redirect to github
@@ -338,7 +451,11 @@ if __name__ == "__main__":
             # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
             readme_lines = f.readlines()
             readme_buffer = []
-            images = ["docs/ui.jpeg", "docs/four-seasons-20210808.png"]
+            images = [
+                "docs/ui.jpeg",
+                "docs/four-seasons-20210808.png",
+                "docs/gallery.jpg",
+            ]
             for line in readme_lines:
                 readme_buffer.append(line)
                 for image in images:
@@ -366,6 +483,9 @@ if __name__ == "__main__":
             init_image=init_image,
             image_prompts=image_prompts,
             continue_prev_run=continue_prev_run,
+            mse_weight=mse_weight,
+            mse_weight_decay=mse_weight_decay,
+            mse_weight_decay_steps=mse_weight_decay_steps,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG

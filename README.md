@@ -1,6 +1,9 @@
 # VQGAN-CLIP web app
 
-Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app)
+![LGTM Grade](https://img.shields.io/lgtm/grade/python/github/tnwei/vqgan-clip-app)
+![License](https://img.shields.io/github/license/tnwei/vqgan-clip-app)
+
+Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app). CLIP guided diffusion is WIP on a separate branch, refer to [its README](https://github.com/tnwei/vqgan-clip-app/blob/guided-diffusion/diffusion_README.md) for instructions.
 
 ## Brief intro
 
@@ -51,6 +54,8 @@ $ tree output
 The gallery viewer reads from `output/` and visualizes previous runs together with saved metadata. 
 
 ![Screenshot of the gallery viewer](docs/gallery.jpg)
+
+If the details are too much, call `python gallery.py --kiosk` instead to only show the images and their prompts.
 
 ## App structure
 
