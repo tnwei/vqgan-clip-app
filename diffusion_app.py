@@ -18,13 +18,24 @@ sys.path.append("./taming-transformers")
 
 import imageio
 import numpy as np
-from diffusion_logic import CLIPGuidedDiffusion
+from diffusion_logic import CLIPGuidedDiffusion256, CLIPGuidedDiffusion256HQ
+
+DIFFUSION_METHODS = [
+    # "CLIP Guided Diffusion 256x256",
+    "CLIP Guided Diffusion 256x256 HQ"
+]
 
 
-def generate_image(prompt: str, seed=0, num_steps=500, continue_prev_run=True) -> None:
+def generate_image(
+    diffusion_method: str, prompt: str, seed=0, num_steps=500, continue_prev_run=True
+) -> None:
 
     ### Init -------------------------------------------------------------------
-    run = CLIPGuidedDiffusion(
+
+    if diffusion_method == DIFFUSION_METHODS[0]:
+        RunClass = CLIPGuidedDiffusion256HQ
+
+    run = RunClass(
         prompt=prompt,
         seed=seed,
         num_steps=num_steps,
@@ -202,6 +213,13 @@ if __name__ == "__main__":
             help="VQGAN-CLIP will generate an image that best fits the prompt",
         )
 
+        diffusion_method = st.sidebar.radio(
+            "Method",
+            DIFFUSION_METHODS,
+            index=0,
+            help="Choose diffusion image generation method, corresponding to the notebooks in Eleuther's repo",
+        )
+
         image_size = st.sidebar.text("Image size: fixed to 256x256")
         set_seed = st.sidebar.checkbox(
             "Set seed",
@@ -224,7 +242,9 @@ if __name__ == "__main__":
             seed = None
 
         continue_prev_run = st.sidebar.checkbox(
-            "Skip init if possible", value=True, help="Skips lengthy model init"
+            "Skip init if models are loaded",
+            value=True,
+            help="Skips lengthy model init",
         )
         submitted = st.form_submit_button("Run!")
         # End of form
@@ -268,7 +288,7 @@ if __name__ == "__main__":
         # debug_slot.write(st.session_state) # DEBUG
         status_text.text("Loading weights ...")
         generate_image(
-            # Inputs
+            diffusion_method=diffusion_method,
             prompt=text_input,
             seed=seed,
             num_steps=num_steps,
