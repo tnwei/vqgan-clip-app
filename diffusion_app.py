@@ -18,12 +18,24 @@ sys.path.append("./taming-transformers")
 
 import imageio
 import numpy as np
-from diffusion_logic import CLIPGuidedDiffusion256, CLIPGuidedDiffusion256HQ
+from diffusion_logic import (
+    CLIPGuidedDiffusion256HQ,
+    CLIPGuidedDiffusion512HQ,
+    CLIPGuidedDiffusion512HQUncond,
+)
 
 DIFFUSION_METHODS = [
     # "CLIP Guided Diffusion 256x256",
-    "CLIP Guided Diffusion 256x256 HQ"
+    "CLIP Guided Diffusion 256x256 HQ",
+    "CLIP Guided Diffusion 512x512 HQ",
+    "CLIP Guided Diffusion 512x512 HQ Uncond",
 ]
+
+DIFFUSION_WEIGHTS = {
+    "CLIP Guided Diffusion 256x256 HQ": "assets/256x256_diffusion_uncond.pt",
+    "CLIP Guided Diffusion 512x512 HQ": "assets/512x512_diffusion.pt",
+    "CLIP Guided Diffusion 512x512 HQ Uncond": "assets/512x512_diffusion_uncond_finetune_008100.pt",
+}
 
 
 def generate_image(
@@ -31,9 +43,13 @@ def generate_image(
 ) -> None:
 
     ### Init -------------------------------------------------------------------
-
+    assert diffusion_method in DIFFUSION_METHODS
     if diffusion_method == DIFFUSION_METHODS[0]:
         RunClass = CLIPGuidedDiffusion256HQ
+    elif diffusion_method == DIFFUSION_METHODS[1]:
+        RunClass = CLIPGuidedDiffusion512HQ
+    elif diffusion_method == DIFFUSION_METHODS[2]:
+        RunClass = CLIPGuidedDiffusion512HQUncond
 
     run = RunClass(
         prompt=prompt,
@@ -69,7 +85,7 @@ def generate_image(
             st.session_state["model"],
             st.session_state["diffusion"],
             st.session_state["clip_model"],
-        ) = run.load_model(model_file_loc="assets/256x256_diffusion_uncond.pt")
+        ) = run.load_model(model_file_loc=DIFFUSION_WEIGHTS.get(diffusion_method))
 
     ### Model init -------------------------------------------------------------
     run.model_init()
@@ -133,15 +149,15 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "run_type": "clip_guided_diffusion",
-                    "ckpt": "256x256_diffusion_uncond.pt",
+                    "run_type": diffusion_method,
+                    "ckpt": DIFFUSION_WEIGHTS.get(diffusion_method),
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
                     "continue_prev_run": continue_prev_run,
                     "seed": seed,
-                    "Xdim": 256,
-                    "ydim": 256,
+                    "Xdim": imsize,
+                    "ydim": imsize,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
                 },
@@ -173,15 +189,15 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "run_type": "clip_guided_diffusion",
-                    "ckpt": "256x256_diffusion_uncond.pt",
+                    "run_type": diffusion_method,
+                    "ckpt": DIFFUSION_WEIGHTS.get(diffusion_method),
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
                     "continue_prev_run": continue_prev_run,
                     "seed": seed,
-                    "Xdim": 256,
-                    "ydim": 256,
+                    "Xdim": imsize,
+                    "ydim": imsize,
                     "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
                     "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
                 },
@@ -210,7 +226,7 @@ if __name__ == "__main__":
 
         text_input = st.text_input(
             "Text prompt",
-            help="VQGAN-CLIP will generate an image that best fits the prompt",
+            help="CLIP-guided diffusion will generate an image that best fits the prompt",
         )
 
         diffusion_method = st.sidebar.radio(
@@ -220,7 +236,15 @@ if __name__ == "__main__":
             help="Choose diffusion image generation method, corresponding to the notebooks in Eleuther's repo",
         )
 
-        image_size = st.sidebar.text("Image size: fixed to 256x256")
+        if diffusion_method == DIFFUSION_METHODS[0]:
+            image_size_notice = st.sidebar.text("Image size: fixed to 256x256")
+            imsize = 256
+        elif (diffusion_method == DIFFUSION_METHODS[1]) or (
+            diffusion_method == DIFFUSION_METHODS[2]
+        ):
+            image_size_notice = st.sidebar.text("Image size: fixed to 512x512")
+            imsize = 512
+
         set_seed = st.sidebar.checkbox(
             "Set seed",
             value=0,
@@ -228,7 +252,7 @@ if __name__ == "__main__":
         )
         num_steps = st.sidebar.number_input(
             "Num steps",
-            value=500,
+            value=1000,
             min_value=0,
             max_value=None,
             step=1,
