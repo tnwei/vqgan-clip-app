@@ -552,7 +552,7 @@ class CLIPGuidedDiffusion512HQ:
 
             return self.model, self.diffusion, self.clip_model
 
-    def cond_fn(self, x, t, out, y=None):
+    def cond_fn(self, x, t, y=None):
         # 512 HQ notebook different from 256 HQ notebook
         with torch.enable_grad():
             x = x.detach().requires_grad_()
@@ -567,7 +567,7 @@ class CLIPGuidedDiffusion512HQ:
             image_embeds = (
                 self.clip_model.encode_image(clip_in).float().view([self.cutn, n, -1])
             )
-            dists = spherical_dist_loss(image_embeds, self.text_embed.unsqueeze(0))
+            dists = spherical_dist_loss(image_embeds, self.target_embeds.unsqueeze(0))
             losses = dists.mean(0)
             tv_losses = tv_loss(x_in)
             loss = (
