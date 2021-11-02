@@ -93,7 +93,6 @@ def generate_image(
     ### Iterate ----------------------------------------------------------------
     step_counter = 0
     frames = []
-    num_steps = 500  # saw this from the nb, it's baked in somewhere
 
     try:
         # Try block catches st.script_runner.StopExecution, no need of a dedicated stop button

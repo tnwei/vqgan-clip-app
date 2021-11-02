@@ -85,7 +85,7 @@ class CLIPGuidedDiffusion256:
             {
                 "attention_resolutions": "32, 16, 8",
                 "class_cond": False,
-                "diffusion_steps": 1000,  # not supposed to change this?
+                "diffusion_steps": num_steps,  # not supposed to change this?
                 "rescale_timesteps": False,
                 "timestep_respacing": str(num_steps),
                 "image_size": 256,
@@ -236,7 +236,7 @@ class CLIPGuidedDiffusion256HQ:
             {
                 "attention_resolutions": "32, 16, 8",
                 "class_cond": False,
-                "diffusion_steps": 1000,
+                "diffusion_steps": num_steps,
                 "rescale_timesteps": True,
                 "timestep_respacing": str(
                     num_steps
@@ -447,7 +447,7 @@ class CLIPGuidedDiffusion512HQ:
             {
                 "attention_resolutions": "32, 16, 8",
                 "class_cond": True,
-                "diffusion_steps": 1000,
+                "diffusion_steps": num_steps,
                 "rescale_timesteps": True,
                 "timestep_respacing": str(
                     num_steps
@@ -670,7 +670,7 @@ class CLIPGuidedDiffusion512HQUncond:
             {
                 "attention_resolutions": "32, 16, 8",
                 "class_cond": False,
-                "diffusion_steps": 1000,
+                "diffusion_steps": num_steps,
                 "rescale_timesteps": True,
                 "timestep_respacing": str(
                     num_steps
