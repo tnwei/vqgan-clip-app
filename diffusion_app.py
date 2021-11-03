@@ -34,7 +34,7 @@ def generate_image(
     ### Init -------------------------------------------------------------------
     run = CLIPGuidedDiffusion(
         prompt=prompt,
-        weights=diffusion_weights,
+        ckpt=diffusion_weights,
         seed=seed,
         num_steps=num_steps,
         continue_prev_run=continue_prev_run,
@@ -67,7 +67,10 @@ def generate_image(
             st.session_state["model"],
             st.session_state["diffusion"],
             st.session_state["clip_model"],
-        ) = run.load_model(model_file_loc="assets/" + diffusion_method)
+        ) = run.load_model(
+            model_file_loc="assets/"
+            + DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method)
+        )
 
     ### Model init -------------------------------------------------------------
     run.model_init()

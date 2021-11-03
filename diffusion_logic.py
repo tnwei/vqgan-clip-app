@@ -19,7 +19,7 @@ from guided_diffusion.script_util import (
 DIFFUSION_METHODS_AND_WEIGHTS = {
     # "CLIP Guided Diffusion 256x256",
     "256x256 HQ Uncond": "256x256_diffusion_uncond.pt",
-    # "512x512 HQ Cond": "512x512_diffusion.pt",
+    "512x512 HQ Cond": "512x512_diffusion.pt",
     "512x512 HQ Uncond": "512x512_diffusion_uncond_finetune_008100.pt",
 }
 
@@ -454,7 +454,7 @@ class CLIPGuidedDiffusion:
     def __init__(
         self,
         prompt: str,
-        weights: str,
+        ckpt: str,
         batch_size: int = 1,
         clip_guidance_scale: float = 1000,
         seed: int = 0,
@@ -462,24 +462,25 @@ class CLIPGuidedDiffusion:
         continue_prev_run: bool = True,
     ) -> None:
 
-        # Support uncond models for now
-        assert weights in DIFFUSION_METHODS_AND_WEIGHTS.keys()
+        assert ckpt in DIFFUSION_METHODS_AND_WEIGHTS.keys()
+        self.ckpt = ckpt
+        print(self.ckpt)
 
         # Default config
         self.model_config = model_and_diffusion_defaults()
         self.model_config.update(
             {
                 "attention_resolutions": "32, 16, 8",
-                "class_cond": False,
+                "class_cond": True if ckpt == "512x512 HQ Cond" else False,
                 "diffusion_steps": num_steps,
                 "rescale_timesteps": True,
                 "timestep_respacing": str(
                     num_steps
                 ),  # modify this to decrease timesteps
-                "image_size": 512 if weights.startswith("512") else 256,
+                "image_size": 512 if ckpt.startswith("512") else 256,
                 "learn_sigma": True,
                 "noise_schedule": "linear",
-                "num_channels": 512 if weights.startswith("512") else 256,
+                "num_channels": 256,
                 "num_head_channels": 64,
                 "num_res_blocks": 2,
                 "resblock_updown": True,
@@ -551,6 +552,11 @@ class CLIPGuidedDiffusion:
             self.model.load_state_dict(torch.load(model_file_loc, map_location="cpu"))
             self.model.eval().requires_grad_(False).to(self.device)
 
+            if self.ckpt == "512x512 HQ Cond":
+                for name, param in self.model.named_parameters():
+                    if "qkv" in name or "norm" in name or "proj" in name:
+                        param.requires_grad_()
+
             if self.model_config["use_fp16"]:
                 self.model.convert_to_fp16()
 
@@ -573,6 +579,32 @@ class CLIPGuidedDiffusion:
                 self.lpips_model = lpips.LPIPS(net="vgg").to(self.device)
 
             return self.model, self.diffusion, self.clip_model
+
+    def cond_fn_conditional(self, x, t, y=None):
+        # From 512 HQ notebook using OpenAI's conditional 512x512 model
+        # TODO: Merge with cond_fn's cutn_batches
+        with torch.enable_grad():
+            x = x.detach().requires_grad_()
+            n = x.shape[0]
+            my_t = torch.ones([n], device=self.device, dtype=torch.long) * self.cur_t
+            out = self.diffusion.p_mean_variance(
+                self.model, x, my_t, clip_denoised=False, model_kwargs={"y": y}
+            )
+            fac = self.diffusion.sqrt_one_minus_alphas_cumprod[self.cur_t]
+            x_in = out["pred_xstart"] * fac + x * (1 - fac)
+            clip_in = self.normalize(self.make_cutouts(x_in.add(1).div(2)))
+            image_embeds = (
+                self.clip_model.encode_image(clip_in).float().view([self.cutn, n, -1])
+            )
+            dists = spherical_dist_loss(image_embeds, self.target_embeds.unsqueeze(0))
+            losses = dists.mean(0)
+            tv_losses = tv_loss(x_in)
+            loss = (
+                losses.sum() * self.clip_guidance_scale
+                + tv_losses.sum() * self.tv_scale
+            )
+            # TODO: Implement init image
+            return -torch.autograd.grad(loss, x)[0]
 
     def cond_fn(self, x, t, out, y=None):
         n = x.shape[0]
@@ -646,18 +678,37 @@ class CLIPGuidedDiffusion:
 
         self.cur_t = self.diffusion.num_timesteps - self.skip_timesteps - 1
 
-        self.samples = sample_fn(
-            self.model,
-            (self.batch_size, 3, self.side_y, self.side_x),
-            clip_denoised=False,
-            model_kwargs={},
-            cond_fn=self.cond_fn,
-            progress=True,
-            skip_timesteps=self.skip_timesteps,
-            init_image=self.init,
-            randomize_class=True,
-            cond_fn_with_grad=True,
-        )
+        if self.ckpt == "512x512 HQ Cond":
+            print("Using conditional sampling fn")
+            self.samples = sample_fn(
+                self.model,
+                (self.batch_size, 3, self.side_y, self.side_x),
+                clip_denoised=False,
+                model_kwargs={
+                    "y": torch.zeros(
+                        [self.batch_size], device=self.device, dtype=torch.long
+                    )
+                },
+                cond_fn=self.cond_fn_conditional,
+                progress=True,
+                skip_timesteps=self.skip_timesteps,
+                init_image=self.init,
+                randomize_class=True,
+            )
+        else:
+            print("Using unconditional sampling fn")
+            self.samples = sample_fn(
+                self.model,
+                (self.batch_size, 3, self.side_y, self.side_x),
+                clip_denoised=False,
+                model_kwargs={},
+                cond_fn=self.cond_fn,
+                progress=True,
+                skip_timesteps=self.skip_timesteps,
+                init_image=self.init,
+                randomize_class=True,
+                cond_fn_with_grad=True,
+            )
 
         self.samplesgen = enumerate(self.samples)
 
