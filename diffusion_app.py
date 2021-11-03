@@ -1,10 +1,3 @@
-"""
-This script is organized like so:
-+ `if __name__ == "__main__" sets up the Streamlit UI elements
-+ `generate_image` houses interactions between UI and the CLIP image 
-generation models
-+ Core model code is abstracted in `logic.py` and imported in `generate_image`
-"""
 import streamlit as st
 from pathlib import Path
 import sys
@@ -18,13 +11,7 @@ sys.path.append("./taming-transformers")
 
 import imageio
 import numpy as np
-from diffusion_logic import (
-    # CLIPGuidedDiffusion256HQ,
-    # CLIPGuidedDiffusion512HQ,
-    # CLIPGuidedDiffusion512HQUncond,
-    CLIPGuidedDiffusion,
-    DIFFUSION_METHODS_AND_WEIGHTS,
-)
+from diffusion_logic import CLIPGuidedDiffusion, DIFFUSION_METHODS_AND_WEIGHTS
 
 
 def generate_image(
@@ -133,7 +120,8 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "ckpt": diffusion_method,
+                    "diffusion_method": diffusion_method,
+                    "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
@@ -172,7 +160,8 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "ckpt": diffusion_method,
+                    "diffusion_method": diffusion_method,
+                    "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
@@ -265,28 +254,6 @@ if __name__ == "__main__":
         im_display_slot.image(
             st.session_state["prev_im"], caption="Output image", output_format="PNG"
         )
-
-    # with st.beta_expander("Expand for README"):
-    #     with open("README.md", "r") as f:
-    #         # description = f.read()
-    #         # Preprocess links to redirect to github
-    #         # Thank you https://discuss.streamlit.io/u/asehmi, works like a charm!
-    #         # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
-    #         readme_lines = f.readlines()
-    #         readme_buffer = []
-    #         images = ["docs/ui.jpeg", "docs/four-seasons-20210808.png"]
-    #         for line in readme_lines:
-    #             readme_buffer.append(line)
-    #             for image in images:
-    #                 if image in line:
-    #                     st.markdown(" ".join(readme_buffer[:-1]))
-    #                     st.image(
-    #                         f"https://raw.githubusercontent.com/tnwei/vqgan-clip-app/main/{image}"
-    #                     )
-    #                     readme_buffer.clear()
-    #         st.markdown(" ".join(readme_buffer))
-
-    # st.write(description)
 
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG
