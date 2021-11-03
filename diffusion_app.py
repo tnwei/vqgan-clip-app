@@ -6,6 +6,8 @@ import shutil
 import json
 import os
 import base64
+from PIL import Image
+from typing import Optional
 
 sys.path.append("./taming-transformers")
 
@@ -15,7 +17,13 @@ from diffusion_logic import CLIPGuidedDiffusion, DIFFUSION_METHODS_AND_WEIGHTS
 
 
 def generate_image(
-    diffusion_weights: str, prompt: str, seed=0, num_steps=500, continue_prev_run=True
+    diffusion_weights: str,
+    prompt: str,
+    seed=0,
+    num_steps=500,
+    continue_prev_run=True,
+    init_image: Optional[Image.Image] = None,
+    skip_timesteps: int = 0,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -25,6 +33,7 @@ def generate_image(
         seed=seed,
         num_steps=num_steps,
         continue_prev_run=continue_prev_run,
+        skip_timesteps=skip_timesteps,
     )
 
     # Generate random run ID
@@ -65,7 +74,13 @@ def generate_image(
         st.session_state["loaded_wt"] = diffusion_method
 
     ### Model init -------------------------------------------------------------
-    run.model_init()
+    # if continue_prev_run is True:
+    #     run.model_init(init_image=st.session_state["prev_im"])
+    # elif init_image is not None:
+    if init_image is not None:
+        run.model_init(init_image=init_image)
+    else:
+        run.model_init()
 
     ### Iterate ----------------------------------------------------------------
     step_counter = 0
@@ -239,6 +254,36 @@ if __name__ == "__main__":
         else:
             seed = None
 
+        use_custom_reference_image = st.sidebar.checkbox(
+            "Use reference image",
+            value=False,
+            help="Check to add a reference image. The network will attempt to match the generated image to the provided reference",
+        )
+
+        reference_image_widget = st.sidebar.empty()
+        # skip_timesteps_widget = st.sidebar.empty()
+        if use_custom_reference_image is True:
+            reference_image = reference_image_widget.file_uploader(
+                "Upload reference image",
+                type=["png", "jpeg", "jpg"],
+                accept_multiple_files=False,
+                help="Reference image for the network, will be resized to fit specified dimensions",
+            )
+            # Convert from UploadedFile object to PIL Image
+            if reference_image is not None:
+                reference_image: Image.Image = Image.open(reference_image).convert(
+                    "RGB"
+                )  # just to be sure
+            # skip_timesteps = skip_timesteps_widget.number_input(
+            #     "Skip timesteps (suggested 200-500)",
+            #     value=200,
+            #     help="Higher values make the output look more like the reference image",
+            # )
+            skip_timesteps = 200
+        else:
+            reference_image = None
+            skip_timesteps = 0
+
         continue_prev_run = st.sidebar.checkbox(
             "Skip init if models are loaded",
             value=True,
@@ -269,6 +314,8 @@ if __name__ == "__main__":
             seed=seed,
             num_steps=num_steps,
             continue_prev_run=continue_prev_run,
+            init_image=reference_image,
+            skip_timesteps=skip_timesteps,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG

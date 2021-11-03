@@ -8,6 +8,7 @@ from torch import nn
 from torch.nn import functional as F
 import math
 import lpips
+from PIL import Image
 
 sys.path.append("./guided-diffusion")
 
@@ -237,6 +238,7 @@ class CLIPGuidedDiffusion:
         seed: int = 0,
         num_steps: int = 1000,
         continue_prev_run: bool = True,
+        skip_timesteps: int = 0,
     ) -> None:
 
         assert ckpt in DIFFUSION_METHODS_AND_WEIGHTS.keys()
@@ -287,14 +289,12 @@ class CLIPGuidedDiffusion:
         # Removed, repeat batches by triggering a new run
         # self.n_batches = 1
 
-        self.init_image = None  # TODO add control widget
-
         # This enhances the effect of the init image, a good value is 1000.
         self.init_scale = 1000  # TODO add control widget
 
         # This needs to be between approx. 200 and 500 when using an init image.
         # Higher values make the output look more like the init.
-        self.skip_timesteps = 0  # TODO add control widget
+        self.skip_timesteps = skip_timesteps  # TODO add control widget
 
         self.seed = seed
         self.continue_prev_run = continue_prev_run
@@ -351,11 +351,6 @@ class CLIPGuidedDiffusion:
                 std=[0.26862954, 0.26130258, 0.27577711],
             )
 
-            if self.init_image is None:
-                self.lpips_model = None
-            else:
-                self.lpips_model = lpips.LPIPS(net="vgg").to(self.device)
-
             return self.model, self.diffusion, self.clip_model
 
     def cond_fn_conditional(self, x, t, y=None):
@@ -411,7 +406,7 @@ class CLIPGuidedDiffusion:
         grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
         return grad
 
-    def model_init(self) -> None:
+    def model_init(self, init_image: Image.Image = None) -> None:
         if self.seed is not None:
             torch.manual_seed(self.seed)
 
@@ -444,10 +439,17 @@ class CLIPGuidedDiffusion:
         self.weights /= self.weights.sum().abs()
 
         self.init = None
-        # if init_image is not None:
-        #     init = Image.open(fetch(init_image)).convert('RGB')
-        #     init = init.resize((side_x, side_y), Image.LANCZOS)
-        #     init = TF.to_tensor(init).to(device).unsqueeze(0).mul(2).sub(1)
+        if init_image is not None:
+            self.init = init_image.resize((self.side_x, self.side_y), Image.LANCZOS)
+            self.init = (
+                TF.to_tensor(self.init).to(self.device).unsqueeze(0).mul(2).sub(1)
+            )
+
+        # LPIPS not required if init_image not used!
+        if self.init is None:
+            self.lpips_model = None
+        else:
+            self.lpips_model = lpips.LPIPS(net="vgg").to(self.device)
 
         if self.model_config["timestep_respacing"].startswith("ddim"):
             sample_fn = self.diffusion.ddim_sample_loop_progressive
