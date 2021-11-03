@@ -35,6 +35,9 @@ def generate_image(
         os.urandom(6)
     ).decode("ascii")
 
+    if "loaded_wt" not in st.session_state:
+        st.session_state["loaded_wt"] = None
+
     run_start_dt = datetime.datetime.now()
 
     ### Load model -------------------------------------------------------------
@@ -43,6 +46,7 @@ def generate_image(
         and ("model" in st.session_state)
         and ("clip_model" in st.session_state)
         and ("diffusion" in st.session_state)
+        and st.session_state["loaded_wt"] == diffusion_weights
     ):
         run.load_model(
             prev_model=st.session_state["model"],
@@ -58,6 +62,7 @@ def generate_image(
             model_file_loc="assets/"
             + DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method)
         )
+        st.session_state["loaded_wt"] = diffusion_method
 
     ### Model init -------------------------------------------------------------
     run.model_init()
