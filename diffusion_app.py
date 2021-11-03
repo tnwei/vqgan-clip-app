@@ -19,40 +19,22 @@ sys.path.append("./taming-transformers")
 import imageio
 import numpy as np
 from diffusion_logic import (
-    CLIPGuidedDiffusion256HQ,
-    CLIPGuidedDiffusion512HQ,
-    CLIPGuidedDiffusion512HQUncond,
+    # CLIPGuidedDiffusion256HQ,
+    # CLIPGuidedDiffusion512HQ,
+    # CLIPGuidedDiffusion512HQUncond,
+    CLIPGuidedDiffusion,
+    DIFFUSION_METHODS_AND_WEIGHTS,
 )
-
-DIFFUSION_METHODS = [
-    # "CLIP Guided Diffusion 256x256",
-    "CLIP Guided Diffusion 256x256 HQ",
-    "CLIP Guided Diffusion 512x512 HQ",
-    "CLIP Guided Diffusion 512x512 HQ Uncond",
-]
-
-DIFFUSION_WEIGHTS = {
-    "CLIP Guided Diffusion 256x256 HQ": "assets/256x256_diffusion_uncond.pt",
-    "CLIP Guided Diffusion 512x512 HQ": "assets/512x512_diffusion.pt",
-    "CLIP Guided Diffusion 512x512 HQ Uncond": "assets/512x512_diffusion_uncond_finetune_008100.pt",
-}
 
 
 def generate_image(
-    diffusion_method: str, prompt: str, seed=0, num_steps=500, continue_prev_run=True
+    diffusion_weights: str, prompt: str, seed=0, num_steps=500, continue_prev_run=True
 ) -> None:
 
     ### Init -------------------------------------------------------------------
-    assert diffusion_method in DIFFUSION_METHODS
-    if diffusion_method == DIFFUSION_METHODS[0]:
-        RunClass = CLIPGuidedDiffusion256HQ
-    elif diffusion_method == DIFFUSION_METHODS[1]:
-        RunClass = CLIPGuidedDiffusion512HQ
-    elif diffusion_method == DIFFUSION_METHODS[2]:
-        RunClass = CLIPGuidedDiffusion512HQUncond
-
-    run = RunClass(
+    run = CLIPGuidedDiffusion(
         prompt=prompt,
+        weights=diffusion_weights,
         seed=seed,
         num_steps=num_steps,
         continue_prev_run=continue_prev_run,
@@ -85,7 +67,7 @@ def generate_image(
             st.session_state["model"],
             st.session_state["diffusion"],
             st.session_state["clip_model"],
-        ) = run.load_model(model_file_loc=DIFFUSION_WEIGHTS.get(diffusion_method))
+        ) = run.load_model(model_file_loc="assets/" + diffusion_method)
 
     ### Model init -------------------------------------------------------------
     run.model_init()
@@ -148,8 +130,7 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "run_type": diffusion_method,
-                    "ckpt": DIFFUSION_WEIGHTS.get(diffusion_method),
+                    "ckpt": diffusion_method,
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
@@ -188,8 +169,7 @@ def generate_image(
             json.dump(
                 {
                     "run_id": run_id,
-                    "run_type": diffusion_method,
-                    "ckpt": DIFFUSION_WEIGHTS.get(diffusion_method),
+                    "ckpt": diffusion_method,
                     "num_steps": step_counter,
                     "planned_num_steps": num_steps,
                     "text_input": prompt,
@@ -230,17 +210,15 @@ if __name__ == "__main__":
 
         diffusion_method = st.sidebar.radio(
             "Method",
-            DIFFUSION_METHODS,
+            list(DIFFUSION_METHODS_AND_WEIGHTS.keys()),
             index=0,
             help="Choose diffusion image generation method, corresponding to the notebooks in Eleuther's repo",
         )
 
-        if diffusion_method == DIFFUSION_METHODS[0]:
+        if diffusion_method.startswith("256"):
             image_size_notice = st.sidebar.text("Image size: fixed to 256x256")
             imsize = 256
-        elif (diffusion_method == DIFFUSION_METHODS[1]) or (
-            diffusion_method == DIFFUSION_METHODS[2]
-        ):
+        elif diffusion_method.startswith("512"):
             image_size_notice = st.sidebar.text("Image size: fixed to 512x512")
             imsize = 512
 
@@ -311,7 +289,7 @@ if __name__ == "__main__":
         # debug_slot.write(st.session_state) # DEBUG
         status_text.text("Loading weights ...")
         generate_image(
-            diffusion_method=diffusion_method,
+            diffusion_weights=diffusion_method,
             prompt=text_input,
             seed=seed,
             num_steps=num_steps,
