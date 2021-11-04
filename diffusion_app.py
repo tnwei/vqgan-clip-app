@@ -207,10 +207,6 @@ if __name__ == "__main__":
     st.set_page_config(page_title="CLIP guided diffusion playground")
     st.title("CLIP guided diffusion playground")
 
-    with open("diffusion_README.md", "r") as f:
-        description = f.read()
-    st.write(description)
-
     # Determine what weights are available in `assets/`
     weights_dir = Path("assets").resolve()
     available_diffusion_weights = list(weights_dir.glob("*.pt"))
@@ -225,7 +221,7 @@ if __name__ == "__main__":
     # i.e. no weights found, ask user to download weights
     if len(available_diffusion_methods) == 0:
         st.warning(
-            "No weights found, download diffusion weights in `download-diffusion-weights.sh`"
+            "No weights found, download diffusion weights in `download-diffusion-weights.sh`. See `diffusion_README.md`"
         )
         st.stop()
 
@@ -321,6 +317,11 @@ if __name__ == "__main__":
         im_display_slot.image(
             st.session_state["prev_im"], caption="Output image", output_format="PNG"
         )
+
+    with st.expander("Expand for `diffusion_README.md`"):
+        with open("diffusion_README.md", "r") as f:
+            description = f.read()
+            st.write(description)
 
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG

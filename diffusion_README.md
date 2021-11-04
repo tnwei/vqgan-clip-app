@@ -1,4 +1,4 @@
-Based on the diffusion models hosted at https://github.com/EleutherAI/vqgan-clip/tree/main/notebooks. This WIP code lives on https://github.com/tnwei/vqgan-clip-app/tree/guided-diffusion, plan to have it merged to main when ready.
+Based on the diffusion models hosted at https://github.com/EleutherAI/vqgan-clip/tree/main/notebooks. 
 
 In addition to the VQGAN-CLIP app's installation instructions, requires running the following:
 
@@ -9,5 +9,4 @@ In addition to the VQGAN-CLIP app's installation instructions, requires running 
     + `pip install lpips`
 3. Download the pretrained weights and config files using links in the `download-diffusion-weights.sh` script. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while.
     
-
-Run the app by calling `streamlit run diffusion_app.py` instead.
+Run the app by calling `streamlit run diffusion_app.py`.
