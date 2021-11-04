@@ -211,6 +211,24 @@ if __name__ == "__main__":
         description = f.read()
     st.write(description)
 
+    # Determine what weights are available in `assets/`
+    weights_dir = Path("assets").resolve()
+    available_diffusion_weights = list(weights_dir.glob("*.pt"))
+    available_diffusion_weights = [i.name for i in available_diffusion_weights]
+    diffusion_weights_and_methods = {
+        j: i for i, j in DIFFUSION_METHODS_AND_WEIGHTS.items()
+    }
+    available_diffusion_methods = [
+        diffusion_weights_and_methods.get(i) for i in available_diffusion_weights
+    ]
+
+    # i.e. no weights found, ask user to download weights
+    if len(available_diffusion_methods) == 0:
+        st.warning(
+            "No weights found, download diffusion weights in `download-diffusion-weights.sh`"
+        )
+        st.stop()
+
     # Start of input form
     with st.form("form-inputs"):
         # Only element not in the sidebar, but in the form
@@ -222,7 +240,7 @@ if __name__ == "__main__":
 
         diffusion_method = st.sidebar.radio(
             "Method",
-            list(DIFFUSION_METHODS_AND_WEIGHTS.keys()),
+            available_diffusion_methods,
             index=0,
             help="Choose diffusion image generation method, corresponding to the notebooks in Eleuther's repo",
         )
