@@ -83,7 +83,7 @@ def generate_image(
         run.model_init()
 
     ### Iterate ----------------------------------------------------------------
-    step_counter = 0
+    step_counter = 0 + skip_timesteps
     frames = []
 
     try:
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         )
 
         reference_image_widget = st.sidebar.empty()
-        # skip_timesteps_widget = st.sidebar.empty()
+        skip_timesteps_widget = st.sidebar.empty()
         if use_custom_reference_image is True:
             reference_image = reference_image_widget.file_uploader(
                 "Upload reference image",
@@ -274,12 +274,11 @@ if __name__ == "__main__":
                 reference_image: Image.Image = Image.open(reference_image).convert(
                     "RGB"
                 )  # just to be sure
-            # skip_timesteps = skip_timesteps_widget.number_input(
-            #     "Skip timesteps (suggested 200-500)",
-            #     value=200,
-            #     help="Higher values make the output look more like the reference image",
-            # )
-            skip_timesteps = 200
+            skip_timesteps = skip_timesteps_widget.number_input(
+                "Skip timesteps (suggested 200-500)",
+                value=200,
+                help="Higher values make the output look more like the reference image",
+            )
         else:
             reference_image = None
             skip_timesteps = 0
