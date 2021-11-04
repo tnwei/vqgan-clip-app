@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# Uncomment and run script to download
+
 # ImageNet 1024
 # curl -L -o assets/vqgan_imagenet_f16_1024.yaml -C - 'https://heibox.uni-heidelberg.de/d/8088892a516d4e3baf92/files/?p=%2Fconfigs%2Fmodel.yaml&dl=1'
 # curl -L -o assets/vqgan_imagenet_f16_1024.ckpt -C - 'https://heibox.uni-heidelberg.de/d/8088892a516d4e3baf92/files/?p=%2Fckpts%2Flast.ckpt&dl=1'
