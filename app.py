@@ -270,6 +270,11 @@ if __name__ == "__main__":
         if i.stem in [j.stem for j in available_weight_configs]
     ]
 
+    # i.e. no weights found, ask user to download weights
+    if len(available_weights) == 0:
+        st.warning("No weights found in `assets/`, refer to `download-weights.sh`")
+        st.stop()
+
     # Set vqgan_imagenet_f16_1024 as default if possible
     if "vqgan_imagenet_f16_1024" in available_weights:
         default_weight_index = available_weights.index("vqgan_imagenet_f16_1024")

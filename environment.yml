@@ -21,7 +21,7 @@ dependencies:
   - imageio
   - ipywidgets
   - streamlit
-  - ffmpeg
+  - conda-forge::ffmpeg
   - pyyaml
   - flask
   - pip
