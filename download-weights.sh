@@ -20,7 +20,7 @@
 
 # WikiArt 16384
 # curl -L 'http://eaidata.bmk.sh/data/Wikiart_16384/wikiart_f16_16384_8145600.yaml' > assets/wikiart_16384.yaml
-# curl -L 'http://eaidata.bmk.sh/data/Wikiart_16384/wikiart_f16_16384_8145600.ckpt' > wikiart_16384.ckpt
+# curl -L 'http://eaidata.bmk.sh/data/Wikiart_16384/wikiart_f16_16384_8145600.ckpt' > assets/wikiart_16384.ckpt
 
 # S-Flickr
 # curl -L -o assets/sflckr.yaml -C - 'https://heibox.uni-heidelberg.de/d/73487ab6e5314cb5adba/files/?p=%2Fconfigs%2F2020-11-09T13-31-51-project.yaml&dl=1'
