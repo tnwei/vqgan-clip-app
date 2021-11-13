@@ -4,13 +4,18 @@ from pathlib import Path
 import argparse
 
 
-def update_runs(fdir):
-    runs = []
+def update_runs(fdir, runs):
+    existing_run_folders = [i.absfdir.name for i in runs]
     # Load each run as ModelRun objects
     # Loading the latest ones first
     for i in sorted(fdir.iterdir(), reverse=True):
         # If is a folder and contains images and metadata
-        if i.is_dir() and (i / "details.json").exists() and (i / "output.PNG").exists():
+        if (
+            i.is_dir()
+            and (i / "details.json").exists()
+            and (i / "output.PNG").exists()
+            and i.name not in existing_run_folders
+        ):
             try:
                 runs.append(RunResults(i))
             except Exception as e:
@@ -42,7 +47,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fdir = Path(args.path)
-    runs = update_runs(fdir)
+    runs = update_runs(fdir, [])
 
     app = Flask(
         __name__,
@@ -64,8 +69,8 @@ if __name__ == "__main__":
         # startidx = 1 if startidx is None else int(startidx)
         # endidx = args.numitems if endidx is None else int(endidx)
         # print("startidx, endidx: ", startidx, endidx)
-
-        runs = update_runs(fdir)  # Updates new results when refreshed
+        global runs
+        runs = update_runs(fdir, runs)  # Updates new results when refreshed
         num_pages = (len(runs) // args.numitems) + 1
 
         page_labels = {}
