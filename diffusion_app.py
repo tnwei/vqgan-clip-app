@@ -221,7 +221,7 @@ if __name__ == "__main__":
     # i.e. no weights found, ask user to download weights
     if len(available_diffusion_methods) == 0:
         st.warning(
-            "No weights found, download diffusion weights in `download-diffusion-weights.sh`. See `diffusion_README.md`"
+            "No weights found, download diffusion weights in `download-diffusion-weights.sh`. "
         )
         st.stop()
 
@@ -318,10 +318,29 @@ if __name__ == "__main__":
             st.session_state["prev_im"], caption="Output image", output_format="PNG"
         )
 
-    with st.expander("Expand for `diffusion_README.md`"):
-        with open("diffusion_README.md", "r") as f:
-            description = f.read()
-            st.write(description)
+    with st.expander("Expand for README"):
+        with open("README.md", "r") as f:
+            # description = f.read()
+            # Preprocess links to redirect to github
+            # Thank you https://discuss.streamlit.io/u/asehmi, works like a charm!
+            # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
+            readme_lines = f.readlines()
+            readme_buffer = []
+            images = [
+                "docs/ui.jpeg",
+                "docs/four-seasons-20210808.png",
+                "docs/gallery.jpg",
+            ]
+            for line in readme_lines:
+                readme_buffer.append(line)
+                for image in images:
+                    if image in line:
+                        st.markdown(" ".join(readme_buffer[:-1]))
+                        st.image(
+                            f"https://raw.githubusercontent.com/tnwei/vqgan-clip-app/main/{image}"
+                        )
+                        readme_buffer.clear()
+            st.markdown(" ".join(readme_buffer))
 
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG

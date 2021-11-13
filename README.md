@@ -1,11 +1,11 @@
-# VQGAN-CLIP web app
+# VQGAN-CLIP web app & CLIP guided diffusion web app
 
 ![LGTM Grade](https://img.shields.io/lgtm/grade/python/github/tnwei/vqgan-clip-app)
 ![License](https://img.shields.io/github/license/tnwei/vqgan-clip-app)
 
-Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app). CLIP guided diffusion is WIP on a separate branch, refer to [its README](https://github.com/tnwei/vqgan-clip-app/blob/guided-diffusion/diffusion_README.md) for instructions.
+Link to repo: [tnwei/vqgan-clip-app](https://github.com/tnwei/vqgan-clip-app). 
 
-## Brief intro
+## Intro to VQGAN-CLIP
 
 VQGAN-CLIP has been in vogue for generating art using deep learning. Searching the `r/deepdream` subreddit for VQGAN-CLIP yields [quite a number of results](https://www.reddit.com/r/deepdream/search?q=vqgan+clip&restrict_sr=on). Basically, [VQGAN](https://github.com/CompVis/taming-transformers) can generate pretty high fidelity images, while [CLIP](https://github.com/openai/CLIP) can produce relevant captions for images. Combined, VQGAN-CLIP can take prompts from human input, and iterate to generate images that fit the prompts.
 
@@ -17,17 +17,27 @@ Be advised that you need a beefy GPU with lots of VRAM to generate images large 
 
 Reference is [this Colab notebook](https://colab.research.google.com/drive/1L8oL-vLJXVcRzCFbPwOoMkPKJ8-aYdPN?usp=sharing) originally by Katherine Crowson. The notebook can also be found in [this repo hosted by EleutherAI](https://github.com/EleutherAI/vqgan-clip).
 
+## Intro to CLIP guided diffusion
+
+In mid 2021, Open AI released [Diffusion Models Beat GANS on Image Synthesis](arxiv.org/abs/2105.05233), with corresponding [source code and model checkpoints released on github](https://github.com/openai/guided-diffusion). The cadre of people that brought us VQGAN-CLIP worked their magic, and shared CLIP guided diffusion notebooks for public use. CLIP guided diffusion uses more GPU VRAM, runs slower, and has fixed output sizes depending on the trained model checkpoints, but is capable of producing more breathtaking images. 
+
+The implementation of CLIP guided diffusion in this repo is based on notebooks from the same `EleutherAI/vqgan-clip` repo. 
+
 ## Setup
 
-The steps for setup are based on the Colab referenced above. Atm the procedure is a bit messy, there's probably room for improvement here. 
-
 1. Install the required Python libraries. Using `conda`, run `conda env create -f environment.yml`
-2. Git clone this repo. After that, `cd` into the repo and run: `git clone https://github.com/CompVis/taming-transformers`. (Update to pip install when either of [these](https://github.com/CompVis/taming-transformers/pull/89) [two](https://github.com/CompVis/taming-transformers/pull/81) PRs are merged)
-3. Download the pretrained weights and config files using links in the `download-weights.sh` script. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while. You'll want to at least have both the ImageNet weights, which are used in the reference notebook.
+2. Git clone this repo. After that, `cd` into the repo and run:
+    + `git clone https://github.com/CompVis/taming-transformers` (Update to pip install if either of [these](https://github.com/CompVis/taming-transformers/pull/89) [two](https://github.com/CompVis/taming-transformers/pull/81) PRs are merged)
+    + `git clone https://github.com/crowsonkb/guided-diffusion` (Update to pip install if [this PR](https://github.com/crowsonkb/guided-diffusion/pull/2) is merged)
+3. Download the pretrained weights and config files using the provided links in the files listed below. Note that that all of the links are commented out by default. Recommend to download one by one, as some of the downloads can take a while. 
+    + For VQGAN-CLIP: `download-weights.sh`. You'll want to at least have both the ImageNet weights, which are used in the reference notebook.
+    + For CLIP guided diffusion: `download-diffusion-weights.sh`. 
 
 ## Usage
 
-`streamlit run app.py` launches the web app on `localhost:8501`, while `python gallery.py` launches a gallery viewer on `localhost:5000`. 
++ VQGAN-CLIP: `streamlit run app.py`, launches web app on `localhost:8501` if available
++ CLIP guided diffusion: `streamlit run diffusion_app.py`, launches web app on `localhost:8501` if available
++ Image gallery: `python gallery.py`, launches a gallery viewer on `localhost:5000`. More on this below.
 
 In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
 
@@ -61,7 +71,9 @@ If the details are too much, call `python gallery.py --kiosk` instead to only sh
 
 <!-- move to ARCHITECTURE.md? -->
 
-There is a lot of room for experimentation on CLIP-based image generation, thus care has been taken to make the codebase hackable. `app.py` houses the UI, built with Streamlit ([docs](https://docs.streamlit.io/en/stable/index.html)), while the underlying logic is stowed away in `logic.py`, which in turn depends on `vqgan_utils.py`. 
+There is a lot of room for experimentation on CLIP-based image generation, thus care has been taken to make the codebase hackable. To date, VQGAN-CLIP and CLIP guided diffusion are two separate codebases under this repo. For VQGAN-CLIP, `app.py` houses the UI, while the underlying logic is stowed away in `logic.py`, which in turn depends on `vqgan_utils.py`. Guided diffusion follows similar file structure, with an additional `diffusion_` prefix: `diffusion_app.py` and `diffusion_logic.py`.
+
+The UI is built with Streamlit ([docs](https://docs.streamlit.io/en/stable/index.html)), which makes it easy to throw together dashboards for ML projects.
 
 Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
 
