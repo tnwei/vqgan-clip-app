@@ -320,18 +320,27 @@ if __name__ == "__main__":
 
     with st.expander("Expand for README"):
         with open("README.md", "r") as f:
-            # description = f.read()
             # Preprocess links to redirect to github
             # Thank you https://discuss.streamlit.io/u/asehmi, works like a charm!
             # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
-            readme_lines = f.readlines()
-            readme_buffer = []
+            markdown_links = ["docs/tips-n-tricks.md"]
             images = [
                 "docs/ui.jpeg",
                 "docs/four-seasons-20210808.png",
                 "docs/gallery.jpg",
             ]
+            readme_lines = f.readlines()
+            readme_buffer = []
+
             for line in readme_lines:
+                for md_link in markdown_links:
+                    if md_link in line:
+                        line = line.replace(
+                            md_link,
+                            "https://github.com/tnwei/vqgan-clip-app/tree/main/"
+                            + md_link,
+                        )
+
                 readme_buffer.append(line)
                 for image in images:
                     if image in line:

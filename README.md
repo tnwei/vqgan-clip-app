@@ -41,9 +41,9 @@ The implementation of CLIP guided diffusion in this repo is based on notebooks f
 
 In the web app, select settings on the sidebar, key in the text prompt, and click run to generate images using VQGAN-CLIP. When done, the web app will display the output image as well as a video compilation showing progression of image generation. You can save them directly through the browser's right-click menu. 
 
-The text prompts allow separating text prompts using the "|" symbol, with custom weightage for each. Example: `A beautiful sunny countryside scene of a Collie dog running towards a herd of sheep in a grassy field with a farmhouse in the background:100 | wild flowers:30 | roses:-30 | photorealistic:20 | V-ray:20 | ray tracing:20 | unreal engine:20`. Refer to [this Reddit post](https://www.reddit.com/r/bigsleep/comments/p15fis/tutorial_an_introduction_for_newbies_to_using_the/) for more info. 
-
 A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
+
+See: [tips and tricks](docs/tips-n-tricks.md)
 
 ## Output and gallery viewer
 
