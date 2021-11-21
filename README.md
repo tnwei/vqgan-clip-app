@@ -69,6 +69,7 @@ If the details are too much, call `python gallery.py --kiosk` instead to only sh
 
 ## More details
 
++ [Tips and tricks](docs/tips-n-tricks.md)
 + [Architecture](docs/architecture.md)
 + [Implementation details](docs/implementation-details.md)
 + [Notes and observations](docs/notes-and-observations.md)
