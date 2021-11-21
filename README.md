@@ -67,76 +67,8 @@ The gallery viewer reads from `output/` and visualizes previous runs together wi
 
 If the details are too much, call `python gallery.py --kiosk` instead to only show the images and their prompts.
 
-## App structure
+## More details
 
-<!-- move to ARCHITECTURE.md? -->
-
-There is a lot of room for experimentation on CLIP-based image generation, thus care has been taken to make the codebase hackable. To date, VQGAN-CLIP and CLIP guided diffusion are two separate codebases under this repo. For VQGAN-CLIP, `app.py` houses the UI, while the underlying logic is stowed away in `logic.py`, which in turn depends on `vqgan_utils.py`. Guided diffusion follows similar file structure, with an additional `diffusion_` prefix: `diffusion_app.py` and `diffusion_logic.py`.
-
-The UI is built with Streamlit ([docs](https://docs.streamlit.io/en/stable/index.html)), which makes it easy to throw together dashboards for ML projects.
-
-Defaults settings for the app upon launch are specified in `defaults.yaml`, which can be further adjusted as necessary.
-
-To use your own weights for VQGAN, save both the `yaml` config and the `ckpt` weights in `assets/`, and ensure that they have the same filename, just with different postfixes. It will then appear in the app interface for use. Refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers) for training VQGAN on your own dataset.
-
-To modify the image generation logic, instantiate your own model class in `logic.py` and modify `app.py` accordingly if the inputs / outputs are modified.
-
-`gallery.py` uses Flask and Jinja templating to serve a simple Bootstrap dashboard. It is separate from the code for image generation, and only depends on functions declared in `gallery_utils.py`.
-
-## Modifications introduced
-
-Added the option to carry over the existing generated image and network weights for use in the next run. If a new image size is specified, the image will be cropped to size accordingly. This allows you to **continue iterating on an image** if you like how it has turned out thus far. Note that chaining a few consecutive short runs of the same prompt and running a single run using the same prompt with equivalent steps does not yield the same outcome. 
-
-Extending upon that feature enables **multi-stage iteration**, where the same image can be iterated upon using different prompts at different stages. For example, you can tell the network to generate "Cowboy singing in the sky", then continue the same image and weights using a different prompt, "Fish on an alien planet under the night sky". Because of how backprop works, the network will find the easiest way to change the previous image to fit the new prompt. Should be useful for preserving visual structure between images, and for smoothly transitioning from one scene to another.
-
-Here is an example where "Backyard in spring" is first generated, then iterated upon with prompts "Backyard in summer", "Backyard in autumn", and "Backyard in winter". Major visual elements in the initial image were inherited and utilized across multiple runs.
-
-![Backyard in spring, summer, autumn and winter](docs/four-seasons-20210808.jpg)
-
-In addition, **uploading image prompts has been simplified** compared to using the Colab interface, thanks to Streamlit's file upload widget. From what I've seen thus far, image prompts have a wildcard effect on the content and style of the generated image. Probably reason why I've never seen works of VQGAN-CLIP mentioning use of the image prompt. Either way, if you like clicking "I'm Feeling Lucky" on Google, this is for you.
-
-## Notes
-
-**Generated image size** is bound by GPU VRAM available. The reference notebook default to use 480x480. One of the notebooks in the thoughts section below uses 640x512. For reference, an RTX2060 can barely manage 300x300. You can use image upscaling tools such as [Waifu2X](https://github.com/nagadomi/waifu2x) or [Real ESRGAN](https://github.com/xinntao/Real-ESRGAN) to further upscale the generated image beyond VRAM limits. Just be aware that smaller generated images fundamentally contain less complexity than larger images. 
-
-Following are GPU VRAM consumption read from`nvidia-smi` as reference, using the `vqgan_imagenet_f16_1024` model checkpoint. Note that your mileage may vary:
-
-| Resolution| VRAM Consumption |
-| ----------| ---------------- |
-| 300 x 300 | 4,829 MiB        |
-| 480 x 480 | 8,465 MiB        |
-| 640 x 360 | 8,169 MiB        |
-| 640 x 480 | 10,247 MiB       |
-| 800 x 450 | 13,977 MiB       |
-| 800 x 600 | 18,157 MiB       |
-| 960 x 540 | 15,131 MiB       |
-| 960 x 720 | 19,777 MiB       |
-| 1024 x 576| 17,175 MiB       |
-| 1024 x 768| 22,167 MiB       |
-| 1280 x 720| 24,353 MiB       |
-
-**CUDA out of memory error** If you're getting a CUDA out of memory error on your first run, it is a sign that the image size is too large. If you were able to generate images of a particular size prior, then you might have a CUDA memory leak and need to restart the application. Still figuring out where the leak is from.
-
-**VQGAN weights and art style** In the download links are trained on different datasets. You might find them suitable for generating different art styles. The `sflickr` dataset is skewed towards generating landscape images while the `faceshq` dataset is skewed towards generating faces. If you have no art style preference, the ImageNet weights do remarkably well. In fact, VQGAN-CLIP can be conditioned to generate specific styles, thanks to the breadth of understanding supplied by the CLIP model (see tips section).
-
-Some weights have multiple versions, e.g. ImageNet 1024 and Image 16384. The number represents the codebook (latent space) dimensionality. For more info, refer to the [VQGAN repo](https://github.com/CompVis/taming-transformers), also linked in the intro above.
-
-**How many steps to run VQGAN-CLIP?** There is no ground rule on how many steps to run to get a good image. Images generated are also not guaranteed to be interesting. Experiment! 
-
-## Further tips / cool variations from the internet
-
-+ Long, descriptive prompts can have surprisingly pleasant effects: [Reddit post](https://www.reddit.com/r/MediaSynthesis/comments/oej9qc/gptneo_vqganclip/)
-+ [Unreal engine trick](https://twitter.com/arankomatsuzaki/status/1399471244760649729?s=20)
-+ [Appending "by James Gurney" for stylization](https://moultano.wordpress.com/2021/07/20/tour-of-the-sacred-library/)
-+ [Rotation and zoom effect with VQGAN+CLIP and RIFE](https://www.reddit.com/r/MediaSynthesis/comments/oos5xu/rotate_and_zoom_effect_with_vqganclip_and_rife/)
-
-## Thoughts on further work
-
-+ Maybe some kind of operation that disperses pixel intensities can help "reverse" images so that undesired features can be removed? 
-+ Regularization using path perception loss?
-+ Dockerfile?
-+ This [variation](https://colab.research.google.com/drive/1gFn9u3oPOgsNzJWEFmdK-N9h_y65b8fj) of the Colab notebook implements some form of regularization
-+ This [variation](https://colab.research.google.com/drive/1go6YwMFe5MX6XM9tv-cnQiSTU50N9EeT?usp=sharing#scrollTo=EXMSuW2EQWsd) of the Colab notebook lists more options for VQGAN pre-trained weights
-+ Link up w/ a database so that it's easier to save outputs?
-+ Add self-generated image captions from CLIP?
-+ Guided diffusion variant: https://colab.research.google.com/drive/1F2M1T2ZQtanFpjBUyId1VaxmqPb4eY5N
++ [Architecture](docs/architecture.md)
++ [Implementation details](docs/implementation-details.md)
++ [Notes and observations](docs/notes-and-observations.md)
