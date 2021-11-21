@@ -268,8 +268,11 @@ class CLIPGuidedDiffusion:
                 "use_scale_shift_norm": True,
             }
         )
+        # Split text by "|" symbol
+        self.prompts = [phrase.strip() for phrase in prompt.split("|")]
+        if self.prompts == [""]:
+            self.prompts = []
 
-        self.prompts = [prompt]  # TODO: Prompt splitting
         self.image_prompts = []  # TODO
         self.batch_size = batch_size
 
