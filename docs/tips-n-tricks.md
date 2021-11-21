@@ -25,7 +25,7 @@ For example, you can tell the network to generate "Cowboy singing in the sky", t
 
 Here is an example where "Backyard in spring" is first generated, then iterated upon with prompts "Backyard in summer", "Backyard in autumn", and "Backyard in winter". Major visual elements in the initial image were inherited and utilized across multiple runs.
 
-![Backyard in spring, summer, autumn and winter](docs/four-seasons-20210808.jpg)
+![Backyard in spring, summer, autumn and winter](docs/images/four-seasons-20210808.jpg)
 
 A few things to take note:
 + If a new image size is specified, the existing output image will be cropped to size accordingly.

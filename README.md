@@ -11,7 +11,7 @@ VQGAN-CLIP has been in vogue for generating art using deep learning. Searching t
 
 Thanks to the generosity of creators sharing notebooks on Google Colab, the VQGAN-CLIP technique has seen widespread circulation. However, for regular usage across multiple sessions, I prefer a local setup that can be started up rapidly. Thus, this simple Streamlit app for generating VQGAN-CLIP images on a local environment. Screenshot of the UI as below:
 
-![Screenshot of the UI](docs/ui.jpeg)
+![Screenshot of the UI](docs/images/ui.jpeg)
 
 Be advised that you need a beefy GPU with lots of VRAM to generate images large enough to be interesting. (Hello Quadro owners!). For reference, an RTX2060 can barely manage a 300x300 image. Otherwise you are best served using the notebooks on Colab.
 
@@ -63,13 +63,13 @@ $ tree output
 
 The gallery viewer reads from `output/` and visualizes previous runs together with saved metadata. 
 
-![Screenshot of the gallery viewer](docs/gallery.jpg)
+![Screenshot of the gallery viewer](docs/images/gallery.jpg)
 
 If the details are too much, call `python gallery.py --kiosk` instead to only show the images and their prompts.
 
 ## More details
 
-+ [Tips and tricks](docs/tips-n-tricks.md)
 + [Architecture](docs/architecture.md)
 + [Implementation details](docs/implementation-details.md)
++ [Tips and tricks](docs/tips-n-tricks.md)
 + [Notes and observations](docs/notes-and-observations.md)
