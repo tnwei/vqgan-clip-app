@@ -477,7 +477,9 @@ if __name__ == "__main__":
                         readme_buffer.clear()
             st.markdown(" ".join(readme_buffer))
 
-        # st.write(description)
+    with st.expander("Expand for CHANGELOG"):
+        with open("CHANGELOG.md", "r") as f:
+            st.markdown(f.read())
 
     if submitted:
         # debug_slot.write(st.session_state) # DEBUG
