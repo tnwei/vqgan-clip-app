@@ -453,17 +453,8 @@ if __name__ == "__main__":
             # Preprocess links to redirect to github
             # Thank you https://discuss.streamlit.io/u/asehmi, works like a charm!
             # ref: https://discuss.streamlit.io/t/image-in-markdown/13274/8
-            markdown_links = [
-                "docs/architecture.md",
-                "docs/implementation-details.md",
-                "docs/notes-and-observations.md",
-                "docs/tips-n-tricks.md",
-            ]
-            images = [
-                "docs/images/ui.jpeg",
-                "docs/images/four-seasons-20210808.png",
-                "docs/images/gallery.jpg",
-            ]
+            markdown_links = [str(i) for i in Path("docs/").glob("*.md")]
+            images = [str(i) for i in Path("docs/images/").glob("*")]
             readme_lines = f.readlines()
             readme_buffer = []
 
