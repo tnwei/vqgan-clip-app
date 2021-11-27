@@ -78,7 +78,7 @@ def update_runs(fdir, runs):
     existing_run_folders = [i.absfdir.name for i in runs]
     # Load each run as ModelRun objects
     # Loading the latest ones first
-    for i in sorted(fdir.iterdir(), reverse=True):
+    for i in sorted(fdir.iterdir()):
         # If is a folder and contains images and metadata
         if (
             i.is_dir()
@@ -87,7 +87,7 @@ def update_runs(fdir, runs):
             and i.name not in existing_run_folders
         ):
             try:
-                runs.append(RunResults(i))
+                runs.insert(0, RunResults(i))
             except Exception as e:
                 print(f"Skipped {i} due to raised exception {e}")
     return runs
