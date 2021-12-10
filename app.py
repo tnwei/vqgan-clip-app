@@ -201,6 +201,17 @@ def generate_image(
             "tv_loss_weight": tv_loss_weight,
         }
 
+        if use_scrolling_zooming:
+            details.update(
+                {
+                    "translation_x": translation_x,
+                    "translation_y": translation_y,
+                    "rotation_angle": rotation_angle,
+                    "zoom_factor": zoom_factor,
+                    "transform_interval": transform_interval,
+                }
+            )
+
         if "git" in sys.modules:
             try:
                 repo = git.Repo(search_parent_directories=True)
@@ -268,6 +279,17 @@ def generate_image(
             "mse_weight_decay_steps": mse_weight_decay_steps,
             "tv_loss_weight": tv_loss_weight,
         }
+
+        if use_scrolling_zooming:
+            details.update(
+                {
+                    "translation_x": translation_x,
+                    "translation_y": translation_y,
+                    "rotation_angle": rotation_angle,
+                    "zoom_factor": zoom_factor,
+                    "transform_interval": transform_interval,
+                }
+            )
 
         if "git" in sys.modules:
             try:
