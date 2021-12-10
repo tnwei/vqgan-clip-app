@@ -44,6 +44,12 @@ def generate_image(
     mse_weight_decay: float = 0,
     mse_weight_decay_steps: int = 0,
     tv_loss_weight: float = 1e-3,
+    use_scrolling_zooming: bool = False,
+    translation_x: int = 0,
+    translation_y: int = 0,
+    rotation_angle: float = 0,
+    zoom_factor: float = 1,
+    transform_interval: int = 10,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -61,6 +67,12 @@ def generate_image(
         mse_weight_decay=mse_weight_decay,
         mse_weight_decay_steps=mse_weight_decay_steps,
         tv_loss_weight=tv_loss_weight,
+        use_scrolling_zooming=use_scrolling_zooming,
+        translation_x=translation_x,
+        translation_y=translation_y,
+        rotation_angle=rotation_angle,
+        zoom_factor=zoom_factor,
+        transform_interval=transform_interval,
     )
 
     ### Load model -------------------------------------------------------------
@@ -453,6 +465,53 @@ if __name__ == "__main__":
         else:
             tv_loss_weight = 0
 
+        use_scrolling_zooming = st.sidebar.checkbox(
+            "Scrolling/zooming transforms",
+            value=False,
+            help="At fixed intervals, move the generated image up/down/left/right or zoom in/out",
+        )
+        translation_x_widget = st.sidebar.empty()
+        translation_y_widget = st.sidebar.empty()
+        rotation_angle_widget = st.sidebar.empty()
+        zoom_factor_widget = st.sidebar.empty()
+        transform_interval_widget = st.sidebar.empty()
+        if use_scrolling_zooming is True:
+            translation_x = translation_x_widget.number_input(
+                "Translation in X", value=0, min_value=0, step=1
+            )
+            translation_y = translation_y_widget.number_input(
+                "Translation in y", value=0, min_value=0, step=1
+            )
+            rotation_angle = rotation_angle_widget.number_input(
+                "Rotation angle (degrees)",
+                value=0.0,
+                min_value=0.0,
+                max_value=360.0,
+                step=0.1,
+                format="%.1f",
+            )
+            zoom_factor = zoom_factor_widget.number_input(
+                "Zoom factor",
+                value=1.0,
+                min_value=0.1,
+                max_value=10.0,
+                step=0.1,
+                format="%.1f",
+            )
+            transform_interval = transform_interval_widget.number_input(
+                "Iterations per frame",
+                value=10,
+                min_value=0,
+                step=1,
+                help="Note: Will multiply by num steps above!",
+            )
+        else:
+            translation_x = 0
+            translation_y = 0
+            rotation_angle = 0
+            zoom_factor = 1
+            transform_interval = 1
+
         submitted = st.form_submit_button("Run!")
         # End of form
 
@@ -519,6 +578,13 @@ if __name__ == "__main__":
             mse_weight=mse_weight,
             mse_weight_decay=mse_weight_decay,
             mse_weight_decay_steps=mse_weight_decay_steps,
+            use_scrolling_zooming=use_scrolling_zooming,
+            translation_x=translation_x,
+            translation_y=translation_y,
+            rotation_angle=rotation_angle,
+            zoom_factor=zoom_factor,
+            transform_interval=transform_interval,
         )
+
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
