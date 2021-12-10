@@ -25,6 +25,7 @@ dependencies:
   - pyyaml
   - flask
   - pip
+  - gitpython
   - pip:
     # - stegano
     # - python-xmp-toolkit

@@ -15,6 +15,12 @@ import imageio
 import numpy as np
 from diffusion_logic import CLIPGuidedDiffusion, DIFFUSION_METHODS_AND_WEIGHTS
 
+# Optional
+try:
+    import git
+except:
+    pass
+
 
 def generate_image(
     diffusion_weights: str,
@@ -136,25 +142,32 @@ def generate_image(
         im.save(runoutputdir / "output.PNG", format="PNG")
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        details = {
+            "run_id": run_id,
+            "diffusion_method": diffusion_method,
+            "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
+            "num_steps": step_counter,
+            "planned_num_steps": num_steps,
+            "text_input": prompt,
+            "continue_prev_run": continue_prev_run,
+            "seed": seed,
+            "Xdim": imsize,
+            "ydim": imsize,
+            "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+            "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+        }
+
+        if "git" in sys.modules:
+            try:
+                repo = git.Repo(search_parent_directories=True)
+                commit_sha = repo.head.object.hexsha
+                details["commit_sha"] = commit_sha[:6]
+            except Exception as e:
+                print("GitPython detected but not able to write commit SHA to file")
+                print(f"raised Exception {e}")
+
         with open(runoutputdir / "details.json", "w") as f:
-            json.dump(
-                {
-                    "run_id": run_id,
-                    "diffusion_method": diffusion_method,
-                    "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
-                    "num_steps": step_counter,
-                    "planned_num_steps": num_steps,
-                    "text_input": prompt,
-                    "continue_prev_run": continue_prev_run,
-                    "seed": seed,
-                    "Xdim": imsize,
-                    "ydim": imsize,
-                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
-                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
-                },
-                f,
-                indent=4,
-            )
+            json.dump(details, f, indent=4)
 
         status_text.text("Done!")  # End of run
 
@@ -176,25 +189,32 @@ def generate_image(
         im.save(runoutputdir / "output.PNG", format="PNG")
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
+        details = {
+            "run_id": run_id,
+            "diffusion_method": diffusion_method,
+            "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
+            "num_steps": step_counter,
+            "planned_num_steps": num_steps,
+            "text_input": prompt,
+            "continue_prev_run": continue_prev_run,
+            "seed": seed,
+            "Xdim": imsize,
+            "ydim": imsize,
+            "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+            "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+        }
+
+        if "git" in sys.modules:
+            try:
+                repo = git.Repo(search_parent_directories=True)
+                commit_sha = repo.head.object.hexsha
+                details["commit_sha"] = commit_sha[:6]
+            except Exception as e:
+                print("GitPython detected but not able to write commit SHA to file")
+                print(f"raised Exception {e}")
+
         with open(runoutputdir / "details.json", "w") as f:
-            json.dump(
-                {
-                    "run_id": run_id,
-                    "diffusion_method": diffusion_method,
-                    "ckpt": DIFFUSION_METHODS_AND_WEIGHTS.get(diffusion_method),
-                    "num_steps": step_counter,
-                    "planned_num_steps": num_steps,
-                    "text_input": prompt,
-                    "continue_prev_run": continue_prev_run,
-                    "seed": seed,
-                    "Xdim": imsize,
-                    "ydim": imsize,
-                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
-                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
-                },
-                f,
-                indent=4,
-            )
+            json.dump(details, f, indent=4)
 
         status_text.text("Done!")  # End of run
 

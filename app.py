@@ -23,6 +23,12 @@ import imageio
 import numpy as np
 from logic import VQGANCLIPRun
 
+# Optional
+try:
+    import git
+except:
+    pass
+
 
 def generate_image(
     text_input: str = "the first day of the waters",
@@ -162,31 +168,38 @@ def generate_image(
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
         # Save metadata
+        details = {
+            "run_id": run_id,
+            "num_steps": step_counter,
+            "planned_num_steps": num_steps,
+            "text_input": text_input,
+            "init_image": False if init_image is None else True,
+            "image_prompts": False if len(image_prompts) == 0 else True,
+            "continue_prev_run": continue_prev_run,
+            "prev_run_id": prev_run_id,
+            "seed": run.seed,
+            "Xdim": image_x,
+            "ydim": image_y,
+            "vqgan_ckpt": vqgan_ckpt,
+            "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+            "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+            "mse_weight": mse_weight,
+            "mse_weight_decay": mse_weight_decay,
+            "mse_weight_decay_steps": mse_weight_decay_steps,
+            "tv_loss_weight": tv_loss_weight,
+        }
+
+        if "git" in sys.modules:
+            try:
+                repo = git.Repo(search_parent_directories=True)
+                commit_sha = repo.head.object.hexsha
+                details["commit_sha"] = commit_sha[:6]
+            except Exception as e:
+                print("GitPython detected but not able to write commit SHA to file")
+                print(f"raised Exception {e}")
+
         with open(runoutputdir / "details.json", "w") as f:
-            json.dump(
-                {
-                    "run_id": run_id,
-                    "num_steps": step_counter,
-                    "planned_num_steps": num_steps,
-                    "text_input": text_input,
-                    "init_image": False if init_image is None else True,
-                    "image_prompts": False if len(image_prompts) == 0 else True,
-                    "continue_prev_run": continue_prev_run,
-                    "prev_run_id": prev_run_id,
-                    "seed": run.seed,
-                    "Xdim": image_x,
-                    "ydim": image_y,
-                    "vqgan_ckpt": vqgan_ckpt,
-                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
-                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
-                    "mse_weight": mse_weight,
-                    "mse_weight_decay": mse_weight_decay,
-                    "mse_weight_decay_steps": mse_weight_decay_steps,
-                    "tv_loss_weight": tv_loss_weight,
-                },
-                f,
-                indent=4,
-            )
+            json.dump(details, f, indent=4)
 
         status_text.text("Done!")  # End of run
 
@@ -223,31 +236,39 @@ def generate_image(
         shutil.copy("temp.mp4", runoutputdir / "anim.mp4")
 
         # Save metadata
+        details = {
+            "run_id": run_id,
+            "num_steps": step_counter,
+            "planned_num_steps": num_steps,
+            "text_input": text_input,
+            "init_image": False if init_image is None else True,
+            "image_prompts": False if len(image_prompts) == 0 else True,
+            "continue_prev_run": continue_prev_run,
+            "prev_run_id": prev_run_id,
+            "seed": run.seed,
+            "Xdim": image_x,
+            "ydim": image_y,
+            "vqgan_ckpt": vqgan_ckpt,
+            "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
+            "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
+            "mse_weight": mse_weight,
+            "mse_weight_decay": mse_weight_decay,
+            "mse_weight_decay_steps": mse_weight_decay_steps,
+            "tv_loss_weight": tv_loss_weight,
+        }
+
+        if "git" in sys.modules:
+            try:
+                repo = git.Repo(search_parent_directories=True)
+                commit_sha = repo.head.object.hexsha
+                details["commit_sha"] = commit_sha[:6]
+            except Exception as e:
+                print("GitPython detected but not able to write commit SHA to file")
+                print(f"raised Exception {e}")
+
         with open(runoutputdir / "details.json", "w") as f:
-            json.dump(
-                {
-                    "run_id": run_id,
-                    "num_steps": step_counter,
-                    "planned_num_steps": num_steps,
-                    "text_input": text_input,
-                    "init_image": False if init_image is None else True,
-                    "image_prompts": False if len(image_prompts) == 0 else True,
-                    "continue_prev_run": continue_prev_run,
-                    "prev_run_id": prev_run_id,
-                    "seed": run.seed,
-                    "Xdim": image_x,
-                    "ydim": image_y,
-                    "vqgan_ckpt": vqgan_ckpt,
-                    "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
-                    "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
-                    "mse_weight": mse_weight,
-                    "mse_weight_decay": mse_weight_decay,
-                    "mse_weight_decay_steps": mse_weight_decay_steps,
-                    "tv_loss_weight": tv_loss_weight,
-                },
-                f,
-                indent=4,
-            )
+            json.dump(details, f, indent=4)
+
         status_text.text("Done!")  # End of run
 
 
