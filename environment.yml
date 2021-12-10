@@ -4,9 +4,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - pytorch::pytorch=1.8.1
-  - pytorch::torchvision=0.9.1
-  - pytorch::torchaudio=0.8.1
+  - pytorch::pytorch=1.10.0
+  - pytorch::torchvision=0.11.1
   - cudatoolkit=10.2
   - omegaconf
   - pytorch-lightning
@@ -26,6 +25,7 @@ dependencies:
   - flask
   - pip
   - gitpython
+  - opencv
   - pip:
     # - stegano
     # - python-xmp-toolkit
