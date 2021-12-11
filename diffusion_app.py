@@ -30,6 +30,7 @@ def generate_image(
     continue_prev_run=True,
     init_image: Optional[Image.Image] = None,
     skip_timesteps: int = 0,
+    use_cutout_augmentations: bool = False,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -40,6 +41,7 @@ def generate_image(
         num_steps=num_steps,
         continue_prev_run=continue_prev_run,
         skip_timesteps=skip_timesteps,
+        use_cutout_augmentations=use_cutout_augmentations,
     )
 
     # Generate random run ID
@@ -157,6 +159,9 @@ def generate_image(
             "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
         }
 
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
+
         if "git" in sys.modules:
             try:
                 repo = git.Repo(search_parent_directories=True)
@@ -203,6 +208,9 @@ def generate_image(
             "start_time": run_start_dt.strftime("%Y%m%dT%H%M%S"),
             "end_time": datetime.datetime.now().strftime("%Y%m%dT%H%M%S"),
         }
+
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
 
         if "git" in sys.modules:
             try:
@@ -322,6 +330,13 @@ if __name__ == "__main__":
             value=True,
             help="Skips lengthy model init",
         )
+
+        use_cutout_augmentations = st.sidebar.checkbox(
+            "Use cutout augmentations",
+            value=False,
+            help="Increases image quality, uses additional 1-2 GiB of GPU memory. Probably not required for guided diffusion since it's already pretty HQ and consumes a lot of VRAM, but feel free to experiment",
+        )
+
         submitted = st.form_submit_button("Run!")
         # End of form
 
