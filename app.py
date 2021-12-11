@@ -44,6 +44,7 @@ def generate_image(
     mse_weight_decay: float = 0,
     mse_weight_decay_steps: int = 0,
     tv_loss_weight: float = 1e-3,
+    use_cutout_augmentations: bool = True,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -61,6 +62,7 @@ def generate_image(
         mse_weight_decay=mse_weight_decay,
         mse_weight_decay_steps=mse_weight_decay_steps,
         tv_loss_weight=tv_loss_weight,
+        use_cutout_augmentations=use_cutout_augmentations,
     )
 
     ### Load model -------------------------------------------------------------
@@ -189,6 +191,9 @@ def generate_image(
             "tv_loss_weight": tv_loss_weight,
         }
 
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
+
         if "git" in sys.modules:
             try:
                 repo = git.Repo(search_parent_directories=True)
@@ -256,6 +261,9 @@ def generate_image(
             "mse_weight_decay_steps": mse_weight_decay_steps,
             "tv_loss_weight": tv_loss_weight,
         }
+
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
 
         if "git" in sys.modules:
             try:
@@ -453,6 +461,12 @@ if __name__ == "__main__":
         else:
             tv_loss_weight = 0
 
+        use_cutout_augmentations = st.sidebar.checkbox(
+            "Use cutout augmentations",
+            value=True,
+            help="Increases image quality, uses additional 1-2 GiB of GPU memory",
+        )
+
         submitted = st.form_submit_button("Run!")
         # End of form
 
@@ -519,6 +533,7 @@ if __name__ == "__main__":
             mse_weight=mse_weight,
             mse_weight_decay=mse_weight_decay,
             mse_weight_decay_steps=mse_weight_decay_steps,
+            use_cutout_augmentations=use_cutout_augmentations,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
