@@ -397,6 +397,7 @@ if __name__ == "__main__":
             continue_prev_run=continue_prev_run,
             init_image=reference_image,
             skip_timesteps=skip_timesteps,
+            use_cutout_augmentations=use_cutout_augmentations,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG
