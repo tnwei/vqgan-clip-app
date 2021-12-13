@@ -464,7 +464,7 @@ if __name__ == "__main__":
         use_cutout_augmentations = st.sidebar.checkbox(
             "Use cutout augmentations",
             value=True,
-            help="Increases image quality, uses additional 1-2 GiB of GPU memory",
+            help="Adds cutout augmentatinos in the image generation process. Uses up to additional 4 GiB of GPU memory. Greatly improves image quality. Toggled on by default.",
         )
 
         submitted = st.form_submit_button("Run!")

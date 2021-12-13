@@ -334,7 +334,7 @@ if __name__ == "__main__":
         use_cutout_augmentations = st.sidebar.checkbox(
             "Use cutout augmentations",
             value=False,
-            help="Increases image quality, uses additional 1-2 GiB of GPU memory. Probably not required for guided diffusion since it's already pretty HQ and consumes a lot of VRAM, but feel free to experiment",
+            help="Adds cutout augmentations in the image generation process. Uses additional 1-2 GiB of GPU memory. Increases image quality, but probably not noticeable for guided diffusion since it's already pretty HQ and consumes a lot of VRAM, but feel free to experiment. Will significantly change image composition if toggled on vs toggled off. Toggled off by default.",
         )
 
         submitted = st.form_submit_button("Run!")
