@@ -270,6 +270,8 @@ class CLIPGuidedDiffusion:
     def model_init(self, init_image: Image.Image = None) -> None:
         if self.seed is not None:
             torch.manual_seed(self.seed)
+        else:
+            self.seed = torch.seed()  # Trigger a seed, retrieve the utilized seed
 
         if self.use_cutout_augmentations:
             noise_fac = 0.1
