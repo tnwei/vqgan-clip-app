@@ -18,7 +18,7 @@ from diffusion_logic import CLIPGuidedDiffusion, DIFFUSION_METHODS_AND_WEIGHTS
 # Optional
 try:
     import git
-except:
+except ModuleNotFoundError:
     pass
 
 

@@ -36,7 +36,7 @@ from logic import VQGANCLIPRun
 # Optional
 try:
     import git
-except:
+except ModuleNotFoundError:
     pass
 
 
