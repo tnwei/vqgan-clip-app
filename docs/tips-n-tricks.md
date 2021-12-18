@@ -31,3 +31,12 @@ A few things to take note:
 + If a new image size is specified, the existing output image will be cropped to size accordingly.
 + This is specifically possible for VQGAN-CLIP but not for CLIP guided diffusion. (Explain how both of them work)
 + Splitting a long run into multiple successive runs using the same prompt do not yield the same outcome due to the underlying stochasticity. This randomness can't be mitigated by setting the random seed alone. See the section on reproducibility in notes-and-observations.md. 
+
+## Scrolling and zooming
+
+Added scrolling and zooming from [this notebook](https://colab.research.google.com/github/chigozienri/VQGAN-CLIP-animations/blob/main/VQGAN-CLIP-animations.ipynb) by @chigozienri. 
+
+![Beautiful swirling wind, trending on ArtStation](images/translationx_example_trimmed.gif)
+
+More examples at [this imgur link](https://imgur.com/a/8pyUNCQ).
+
