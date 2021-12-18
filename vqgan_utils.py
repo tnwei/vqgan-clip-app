@@ -143,11 +143,13 @@ def parse_prompt(prompt):
 
 
 class MakeCutouts(nn.Module):
-    def __init__(self, cut_size, cutn, cut_pow=1.0):
+    def __init__(self, cut_size, cutn, cut_pow=1.0, noise_fac=None, augs=None):
         super().__init__()
         self.cut_size = cut_size
         self.cutn = cutn
         self.cut_pow = cut_pow
+        self.noise_fac = noise_fac
+        self.augs = augs
 
     def forward(self, input):
         sideY, sideX = input.shape[2:4]
@@ -162,7 +164,17 @@ class MakeCutouts(nn.Module):
             offsety = torch.randint(0, sideY - size + 1, ())
             cutout = input[:, :, offsety : offsety + size, offsetx : offsetx + size]
             cutouts.append(resample(cutout, (self.cut_size, self.cut_size)))
-        return clamp_with_grad(torch.cat(cutouts, dim=0), 0, 1)
+
+        if self.augs:
+            batch = self.augs(torch.cat(cutouts, dim=0))
+        else:
+            batch = torch.cat(cutouts, dim=0)
+
+        if self.noise_fac:
+            facs = batch.new_empty([self.cutn, 1, 1, 1]).uniform_(0, self.noise_fac)
+            batch = batch + facs * torch.randn_like(batch)
+
+        return clamp_with_grad(batch, 0, 1)
 
 
 def load_vqgan_model(config_path, checkpoint_path):

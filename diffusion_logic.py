@@ -7,6 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 import lpips
 from PIL import Image
+import kornia.augmentation as K
 
 sys.path.append("./guided-diffusion")
 
@@ -36,11 +37,13 @@ def parse_prompt(prompt):
 
 
 class MakeCutouts(nn.Module):
-    def __init__(self, cut_size, cutn, cut_pow=1.0):
+    def __init__(self, cut_size, cutn, cut_pow=1.0, noise_fac=None, augs=None):
         super().__init__()
         self.cut_size = cut_size
         self.cutn = cutn
         self.cut_pow = cut_pow
+        self.noise_fac = noise_fac
+        self.augs = augs
 
     def forward(self, input):
         sideY, sideX = input.shape[2:4]
@@ -55,7 +58,17 @@ class MakeCutouts(nn.Module):
             offsety = torch.randint(0, sideY - size + 1, ())
             cutout = input[:, :, offsety : offsety + size, offsetx : offsetx + size]
             cutouts.append(F.adaptive_avg_pool2d(cutout, self.cut_size))
-        return torch.cat(cutouts)
+
+        if self.augs:
+            batch = self.augs(torch.cat(cutouts, dim=0))
+        else:
+            batch = torch.cat(cutouts, dim=0)
+
+        if self.noise_fac:
+            facs = batch.new_empty([self.cutn, 1, 1, 1]).uniform_(0, self.noise_fac)
+            batch = batch + facs * torch.randn_like(batch)
+
+        return batch
 
 
 def tv_loss(input):
@@ -81,6 +94,7 @@ class CLIPGuidedDiffusion:
         num_steps: int = 1000,
         continue_prev_run: bool = True,
         skip_timesteps: int = 0,
+        use_cutout_augmentations: bool = False,
     ) -> None:
 
         assert ckpt in DIFFUSION_METHODS_AND_WEIGHTS.keys()
@@ -143,6 +157,8 @@ class CLIPGuidedDiffusion:
 
         self.seed = seed
         self.continue_prev_run = continue_prev_run
+
+        self.use_cutout_augmentations = use_cutout_augmentations
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("Using device:", self.device)
@@ -254,8 +270,25 @@ class CLIPGuidedDiffusion:
     def model_init(self, init_image: Image.Image = None) -> None:
         if self.seed is not None:
             torch.manual_seed(self.seed)
+        else:
+            self.seed = torch.seed()  # Trigger a seed, retrieve the utilized seed
 
-        self.make_cutouts = MakeCutouts(self.clip_size, self.cutn, self.cut_pow)
+        if self.use_cutout_augmentations:
+            noise_fac = 0.1
+            augs = nn.Sequential(
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomSharpness(0.3, p=0.4),
+                K.RandomAffine(degrees=30, translate=0.1, p=0.8, padding_mode="border"),
+                K.RandomPerspective(0.2, p=0.4),
+                K.ColorJitter(hue=0.01, saturation=0.01, p=0.7),
+            )
+        else:
+            noise_fac = None
+            augs = None
+
+        self.make_cutouts = MakeCutouts(
+            self.clip_size, self.cutn, self.cut_pow, noise_fac=noise_fac, augs=augs
+        )
         self.side_x = self.side_y = self.model_config["image_size"]
 
         self.target_embeds, self.weights = [], []

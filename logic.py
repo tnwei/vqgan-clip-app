@@ -20,6 +20,7 @@ from torch import optim
 from torchvision import transforms
 import cv2
 import numpy as np
+import kornia.augmentation as K
 
 
 class Run:
@@ -73,6 +74,7 @@ class VQGANCLIPRun(Run):
         mse_weight_decay=0.1,
         mse_weight_decay_steps=50,
         tv_loss_weight=1e-3,
+        use_cutout_augmentations: bool = True,
         # use_augs: bool = True,
         # noise_fac: float = 0.1,
         # use_noise: Optional[float] = None,
@@ -138,6 +140,8 @@ class VQGANCLIPRun(Run):
         self.mse_weight_decay = mse_weight_decay
         self.mse_weight_decay_steps = mse_weight_decay_steps
 
+        self.use_cutout_augmentations = use_cutout_augmentations
+
         # For TV loss
         self.tv_loss_weight = tv_loss_weight
 
@@ -174,9 +178,28 @@ class VQGANCLIPRun(Run):
         cut_size = self.perceptor.visual.input_resolution
         e_dim = self.model.quantize.e_dim
         f = 2 ** (self.model.decoder.num_resolutions - 1)
+
+        if self.use_cutout_augmentations:
+            noise_fac = 0.1
+            augs = nn.Sequential(
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomSharpness(0.3, p=0.4),
+                K.RandomAffine(degrees=30, translate=0.1, p=0.8, padding_mode="border"),
+                K.RandomPerspective(0.2, p=0.4),
+                K.ColorJitter(hue=0.01, saturation=0.01, p=0.7),
+            )
+        else:
+            noise_fac = None
+            augs = None
+
         self.make_cutouts = MakeCutouts(
-            cut_size, self.args.cutn, cut_pow=self.args.cut_pow
+            cut_size,
+            self.args.cutn,
+            cut_pow=self.args.cut_pow,
+            noise_fac=noise_fac,
+            augs=augs,
         )
+
         n_toks = self.model.quantize.n_e
         toksX, toksY = self.args.size[0] // f, self.args.size[1] // f
         sideX, sideY = toksX * f, toksY * f

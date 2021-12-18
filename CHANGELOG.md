@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.XX
+
++ Fixed gallery app adding new images to the last page instead of the first page when refreshing (7bf3b04)
++ Added output commit ID to metadata if GitPython is installed (19eeb30)
++ Added cutout augmentations to VQGAN-CLIP (b3a7ab1) and guided diffusion (9651bc1)
+
 ## 1.0 - Nov 21, 2021
 
 Since starting this repo in Jul 2021 as a personal project, I believe the codebase is now sufficiently feature-complete and stable to call it a 1.0 release. 
@@ -8,7 +14,7 @@ Since starting this repo in Jul 2021 as a personal project, I believe the codeba
 
 + Added support for CLIP guided diffusion (https://github.com/tnwei/vqgan-clip-app/pull/8)
 + Improvements to gallery viewer: added pagination (https://github.com/tnwei/vqgan-clip-app/pull/3), improved webpage responsiveness (https://github.com/tnwei/vqgan-clip-app/issues/9)
-+ Minor tweaks to VQGAN-CLIP app, added options to control MSE regularization (https://github.com/tnwei/vqgan-clip-app/pull/4) and TV loss (https://github.com/tnwei/vqgan-clip-app/)
++ Minor tweaks to VQGAN-CLIP app, added options to control MSE regularization (https://github.com/tnwei/vqgan-clip-app/pull/4) and TV loss (https://github.com/tnwei/vqgan-clip-app/5)
 + Reorganized documentation in README.md and `docs/`
 
 ### Transitioning to 1.0 for existing users

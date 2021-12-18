@@ -50,6 +50,7 @@ def generate_image(
     rotation_angle: float = 0,
     zoom_factor: float = 1,
     transform_interval: int = 10,
+    use_cutout_augmentations: bool = True,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -73,6 +74,7 @@ def generate_image(
         rotation_angle=rotation_angle,
         zoom_factor=zoom_factor,
         transform_interval=transform_interval,
+        use_cutout_augmentations=use_cutout_augmentations,
     )
 
     ### Load model -------------------------------------------------------------
@@ -211,6 +213,8 @@ def generate_image(
                     "transform_interval": transform_interval,
                 }
             )
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
 
         if "git" in sys.modules:
             try:
@@ -290,6 +294,8 @@ def generate_image(
                     "transform_interval": transform_interval,
                 }
             )
+        if use_cutout_augmentations:
+            details["use_cutout_augmentations"] = True
 
         if "git" in sys.modules:
             try:
@@ -534,6 +540,12 @@ if __name__ == "__main__":
             zoom_factor = 1
             transform_interval = 1
 
+        use_cutout_augmentations = st.sidebar.checkbox(
+            "Use cutout augmentations",
+            value=True,
+            help="Adds cutout augmentatinos in the image generation process. Uses up to additional 4 GiB of GPU memory. Greatly improves image quality. Toggled on by default.",
+        )
+
         submitted = st.form_submit_button("Run!")
         # End of form
 
@@ -606,6 +618,7 @@ if __name__ == "__main__":
             rotation_angle=rotation_angle,
             zoom_factor=zoom_factor,
             transform_interval=transform_interval,
+            use_cutout_augmentations=use_cutout_augmentations,
         )
 
         vid_display_slot.video("temp.mp4")
