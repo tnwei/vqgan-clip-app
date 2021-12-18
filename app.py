@@ -21,6 +21,16 @@ from typing import Optional, List
 from omegaconf import OmegaConf
 import imageio
 import numpy as np
+
+# Catch import issue, introduced in version 1.1
+# Deprecate in a few minor versions
+try:
+    import cv2
+except ModuleNotFoundError:
+    st.warning(
+        "Version 1.1 onwards requires opencv. Please update your Python environment as defined in `environment.yml`"
+    )
+
 from logic import VQGANCLIPRun
 
 # Optional
