@@ -509,16 +509,16 @@ if __name__ == "__main__":
                 value=0.0,
                 min_value=0.0,
                 max_value=360.0,
-                step=0.1,
-                format="%.1f",
+                step=0.05,
+                format="%.2f",
             )
             zoom_factor = zoom_factor_widget.number_input(
                 "Zoom factor",
                 value=1.0,
                 min_value=0.1,
                 max_value=10.0,
-                step=0.1,
-                format="%.1f",
+                step=0.02,
+                format="%.2f",
             )
             transform_interval = transform_interval_widget.number_input(
                 "Iterations per frame",
