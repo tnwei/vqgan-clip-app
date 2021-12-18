@@ -18,6 +18,8 @@ import torch.nn as nn
 from torch.nn import functional as F
 from torch import optim
 from torchvision import transforms
+import cv2
+import numpy as np
 import kornia.augmentation as K
 
 
@@ -72,12 +74,18 @@ class VQGANCLIPRun(Run):
         mse_weight_decay=0.1,
         mse_weight_decay_steps=50,
         tv_loss_weight=1e-3,
-        use_cutout_augmentations: bool = True
+        use_cutout_augmentations: bool = True,
         # use_augs: bool = True,
         # noise_fac: float = 0.1,
         # use_noise: Optional[float] = None,
         # mse_withzeros=True,
         ## **kwargs,  # Use this to receive Streamlit objects ## Call from main UI
+        use_scrolling_zooming: bool = False,
+        translation_x: int = 0,
+        translation_y: int = 0,
+        rotation_angle: float = 0,
+        zoom_factor: float = 1,
+        transform_interval: int = 10,
     ) -> None:
         super().__init__()
         self.text_input = text_input
@@ -136,6 +144,13 @@ class VQGANCLIPRun(Run):
 
         # For TV loss
         self.tv_loss_weight = tv_loss_weight
+
+        self.use_scrolling_zooming = use_scrolling_zooming
+        self.translation_x = translation_x
+        self.translation_y = translation_y
+        self.rotation_angle = rotation_angle
+        self.zoom_factor = zoom_factor
+        self.transform_interval = transform_interval
 
     def load_model(
         self, prev_model: nn.Module = None, prev_perceptor: nn.Module = None
@@ -298,26 +313,89 @@ class VQGANCLIPRun(Run):
         return result
 
     def iterate(self) -> Tuple[List[float], Image.Image]:
-        # Forward prop
-        self.opt.zero_grad()
-        losses = self._ascend_txt()
+        if not self.use_scrolling_zooming:
+            # Forward prop
+            self.opt.zero_grad()
+            losses = self._ascend_txt()
 
-        # Grab an image
-        im: Image.Image = checkin(self.model, self.z)
+            # Grab an image
+            im: Image.Image = checkin(self.model, self.z)
 
-        # Backprop
-        loss = sum([j for i, j in losses.items()])
-        loss.backward()
-        self.opt.step()
-        with torch.no_grad():
-            self.z.copy_(self.z.maximum(self.z_min).minimum(self.z_max))
+            # Backprop
+            loss = sum([j for i, j in losses.items()])
+            loss.backward()
+            self.opt.step()
+            with torch.no_grad():
+                self.z.copy_(self.z.maximum(self.z_min).minimum(self.z_max))
 
-        # Advance iteration counter
-        self.iterate_counter += 1
+            # Advance iteration counter
+            self.iterate_counter += 1
 
-        print(
-            f"Step {self.iterate_counter} losses: {[(i, j.item()) for i, j in losses.items()]}"
-        )
+            print(
+                f"Step {self.iterate_counter} losses: {[(i, j.item()) for i, j in losses.items()]}"
+            )
 
-        # Output stuff useful for humans
-        return [(i, j.item()) for i, j in losses.items()], im
+            # Output stuff useful for humans
+            return [(i, j.item()) for i, j in losses.items()], im
+
+        else:
+            # Grab current image
+            im_before_transform: Image.Image = checkin(self.model, self.z)
+
+            # Convert for use in OpenCV
+            imarr = np.array(im_before_transform)
+            imarr = cv2.cvtColor(imarr, cv2.COLOR_RGB2BGR)
+
+            translation = np.float32(
+                [[1, 0, self.translation_x], [0, 1, self.translation_y]]
+            )
+
+            imcenter = (imarr.shape[1] // 2, imarr.shape[0] // 2)
+            rotation = cv2.getRotationMatrix2D(
+                imcenter, angle=self.rotation_angle, scale=self.zoom_factor
+            )
+
+            trans_mat = np.vstack([translation, [0, 0, 1]])
+            rot_mat = np.vstack([rotation, [0, 0, 1]])
+            transformation_matrix = np.matmul(rot_mat, trans_mat)
+
+            outarr = cv2.warpPerspective(
+                imarr,
+                transformation_matrix,
+                (imarr.shape[1], imarr.shape[0]),
+                borderMode=cv2.BORDER_WRAP,
+            )
+
+            transformed_im = Image.fromarray(cv2.cvtColor(outarr, cv2.COLOR_BGR2RGB))
+
+            # Encode as z, reinit
+            self.z, *_ = self.model.encode(
+                TF.to_tensor(transformed_im).to(self.device).unsqueeze(0) * 2 - 1
+            )
+            self.z.requires_grad_(True)
+            self.opt = optim.Adam([self.z], lr=self.args.step_size)
+
+            for _ in range(self.transform_interval):
+                # Forward prop
+                self.opt.zero_grad()
+                losses = self._ascend_txt()
+
+                # Grab an image
+                im: Image.Image = checkin(self.model, self.z)
+
+                # Backprop
+                loss = sum([j for i, j in losses.items()])
+                loss.backward()
+                self.opt.step()
+                with torch.no_grad():
+                    self.z.copy_(self.z.maximum(self.z_min).minimum(self.z_max))
+
+            # Advance iteration counter
+            self.iterate_counter += 1
+
+            print(
+                f"Step {self.iterate_counter} losses: {[(i, j.item()) for i, j in losses.items()]}"
+            )
+
+            # Output stuff useful for humans
+            return [(i, j.item()) for i, j in losses.items()], im
