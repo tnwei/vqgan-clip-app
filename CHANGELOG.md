@@ -1,10 +1,30 @@
 # Changelog
 
-## 1.XX
+## 1.1 - Dec 18, 2021
+
+### What's new
 
 + Fixed gallery app adding new images to the last page instead of the first page when refreshing (7bf3b04)
 + Added output commit ID to metadata if GitPython is installed (19eeb30)
 + Added cutout augmentations to VQGAN-CLIP (b3a7ab1) and guided diffusion (9651bc1)
++ Fixed random seed not saved to output if unspecified in guided diffusion (8972a5f)
++ Added feature to enable generating scrolling/zooming images to VQGAN-CLIP (https://github.com/tnwei/vqgan-clip-app/pull/11)
+
+### Transitioning to 1.1 from 1.0
+
+The Python environment defined in `environment.yml` has been updated to enable generating scrolling/zooming images. Although we only need to add opencv, conda's package resolution required updating Pytorch as well to find a compatible version of opencv. 
+
+Therefore existing users need to do either of the following:
+
+``` bash
+# Remove the current Python env and recreate
+conda env remove -n vqgan-clip-app
+conda env create -f environment.yml
+
+# Directly update the Python environment in-place
+conda activate vqgan-clip-app
+conda env update -f environment.yml --prune
+```
 
 ## 1.0 - Nov 21, 2021
 
