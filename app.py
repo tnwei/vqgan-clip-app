@@ -10,9 +10,13 @@ from pathlib import Path
 import sys
 import datetime
 import shutil
+import torch
 import json
 import os
 import base64
+import traceback
+
+import argparse
 
 sys.path.append("./taming-transformers")
 
@@ -61,6 +65,7 @@ def generate_image(
     zoom_factor: float = 1,
     transform_interval: int = 10,
     use_cutout_augmentations: bool = True,
+    device: Optional[torch.device] = None,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -85,6 +90,7 @@ def generate_image(
         zoom_factor=zoom_factor,
         transform_interval=transform_interval,
         use_cutout_augmentations=use_cutout_augmentations,
+        device=device,
     )
 
     ### Load model -------------------------------------------------------------
@@ -323,6 +329,29 @@ def generate_image(
 
 
 if __name__ == "__main__":
+
+    # Argparse to capture GPU num
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--gpu", type=str, default=None, help="Specify GPU number. Defaults to None."
+    )
+    args = parser.parse_args()
+
+    # Select specific GPU if chosen
+    if args.gpu is not None:
+        for i in args.gpu.split(","):
+            assert (
+                int(i) < torch.cuda.device_count()
+            ), f"You specified --gpu {args.gpu} but torch.cuda.device_count() returned {torch.cuda.device_count()}"
+
+        try:
+            device = torch.device(f"cuda:{args.gpu}")
+        except RuntimeError:
+            print(traceback.format_exc())
+    else:
+        device = None
+
     defaults = OmegaConf.load("defaults.yaml")
     outputdir = Path("output")
     if not outputdir.exists():
@@ -629,6 +658,7 @@ if __name__ == "__main__":
             zoom_factor=zoom_factor,
             transform_interval=transform_interval,
             use_cutout_augmentations=use_cutout_augmentations,
+            device=device,
         )
 
         vid_display_slot.video("temp.mp4")

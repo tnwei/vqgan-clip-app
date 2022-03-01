@@ -86,6 +86,7 @@ class VQGANCLIPRun(Run):
         rotation_angle: float = 0,
         zoom_factor: float = 1,
         transform_interval: int = 10,
+        device: Optional[torch.device] = None,
     ) -> None:
         super().__init__()
         self.text_input = text_input
@@ -126,8 +127,11 @@ class VQGANCLIPRun(Run):
             seed=seed,
         )
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.device = device
+        if device is None:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+
         print("Using device:", device)
 
         self.iterate_counter = 0

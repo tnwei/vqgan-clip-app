@@ -5,9 +5,12 @@ import datetime
 import shutil
 import json
 import os
+import torch
+import traceback
 import base64
 from PIL import Image
 from typing import Optional
+import argparse
 
 sys.path.append("./taming-transformers")
 
@@ -31,6 +34,7 @@ def generate_image(
     init_image: Optional[Image.Image] = None,
     skip_timesteps: int = 0,
     use_cutout_augmentations: bool = False,
+    device: Optional[torch.device] = None,
 ) -> None:
 
     ### Init -------------------------------------------------------------------
@@ -42,6 +46,7 @@ def generate_image(
         continue_prev_run=continue_prev_run,
         skip_timesteps=skip_timesteps,
         use_cutout_augmentations=use_cutout_augmentations,
+        device=device,
     )
 
     # Generate random run ID
@@ -228,6 +233,28 @@ def generate_image(
 
 
 if __name__ == "__main__":
+    # Argparse to capture GPU num
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--gpu", type=str, default=None, help="Specify GPU number. Defaults to None."
+    )
+    args = parser.parse_args()
+
+    # Select specific GPU if chosen
+    if args.gpu is not None:
+        for i in args.gpu.split(","):
+            assert (
+                int(i) < torch.cuda.device_count()
+            ), f"You specified --gpu {args.gpu} but torch.cuda.device_count() returned {torch.cuda.device_count()}"
+
+        try:
+            device = torch.device(f"cuda:{args.gpu}")
+        except RuntimeError:
+            print(traceback.format_exc())
+    else:
+        device = None
+
     outputdir = Path("output")
     if not outputdir.exists():
         outputdir.mkdir()
@@ -398,6 +425,7 @@ if __name__ == "__main__":
             init_image=reference_image,
             skip_timesteps=skip_timesteps,
             use_cutout_augmentations=use_cutout_augmentations,
+            device=device,
         )
         vid_display_slot.video("temp.mp4")
         # debug_slot.write(st.session_state) # DEBUG

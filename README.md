@@ -47,6 +47,16 @@ In the web app, select settings on the sidebar, key in the text prompt, and clic
 
 A one-time download of additional pre-trained weights will occur before generating the first image. Might take a few minutes depending on your internet connection.
 
+If you have multiple GPUs, specify the GPU you want to use by adding `-- --gpu X`. An extra double dash is required to [bypass Streamlit argument parsing](https://github.com/streamlit/streamlit/issues/337). Example commands:
+
+```bash
+# Use 2nd GPU
+streamlit run app.py -- --gpu 1
+
+# Use 3rd GPU
+streamlit run diffusion_app.py -- --gpu 2
+```
+
 See: [tips and tricks](docs/tips-n-tricks.md)
 
 ## Output and gallery viewer
