@@ -8,6 +8,7 @@ from torch.nn import functional as F
 import lpips
 from PIL import Image
 import kornia.augmentation as K
+from typing import Optional
 
 sys.path.append("./guided-diffusion")
 
@@ -95,6 +96,7 @@ class CLIPGuidedDiffusion:
         continue_prev_run: bool = True,
         skip_timesteps: int = 0,
         use_cutout_augmentations: bool = False,
+        device: Optional[torch.device] = None,
     ) -> None:
 
         assert ckpt in DIFFUSION_METHODS_AND_WEIGHTS.keys()
@@ -160,7 +162,11 @@ class CLIPGuidedDiffusion:
 
         self.use_cutout_augmentations = use_cutout_augmentations
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+
         print("Using device:", self.device)
 
     def load_model(
